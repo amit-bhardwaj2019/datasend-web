@@ -34,7 +34,14 @@ class UserController {
                         "name" => $result[0]['name'],
                         "phone" => $result[0]['phone']
                     ]);
-                    $b = setcookie('token', $token,time()+86400, '/', 'localhost:8888', false, true);
+                    $b = setcookie('token', $token,[
+                        'expires' => time()+86400,
+                        'path'      => '/',
+                        'domain'    => 'localhost:8888',
+                        'secure'    => false,
+                        'httponly'  => true,
+                        'samesite'  => 'none'
+                    ]);
                 $returnData = [
                     'code'      => 200,
                     'message'   => 'Success',
