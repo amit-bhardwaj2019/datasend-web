@@ -34,7 +34,7 @@ class UserController {
                         "name" => $result[0]['name'],
                         "phone" => $result[0]['phone']
                     ]);
-                    $b = setcookie('token', $token,[
+                    setcookie('token', $token,[
                         'Expires' => time()+86400,
                         'Path'      => '/',
                         'domain'    => 'localhost:8888',
@@ -42,11 +42,13 @@ class UserController {
                         'HttpOnly'  => true,
                         'SameSite'  => 'None'
                     ]);
+                /*    $expires = time()+86400;
+                    header ("Set-Cookie: token=$token; expires=$expires;path=/; domain=localhost:8888; secure=true; httponly=true; samesite=None");
+                    */
                 $returnData = [
                     'code'      => 200,
                     'message'   => 'Success',
-                    'pin_auth'  => $result[0]['pin_auth'] === "1" ? true : false,
-                    'cookie'    => $b
+                    'pin_auth'  => $result[0]['pin_auth'] === "1" ? true : false
                 ];
                 
                 $res['body'] = json_encode($returnData);
