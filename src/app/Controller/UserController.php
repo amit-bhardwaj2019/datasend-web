@@ -40,7 +40,7 @@ class UserController {
                         'domain'    => 'localhost:8888',
                         'secure'    => true,
                         'httponly'  => true,
-                        'samesite'  => 'none'
+                        'samesite'  => 'None'
                     ]);
                 $returnData = [
                     'code'      => 200,
