@@ -37,7 +37,7 @@ class UserController {
                     setcookie('token', $token,[
                         'expires' => time()+86400,
                         'path'      => '/',
-                        'domain'    => 'localhost:8888',
+                        'domain'    => 'localhost',
                         'secure'    => true,
                         'httponly'  => true,
                         'samesite'  => 'None'
