@@ -34,17 +34,14 @@ class UserController {
                         "name" => $result[0]['name'],
                         "phone" => $result[0]['phone']
                     ]);
-                   /* setcookie('token', $token,[
-                        'Expires' => time()+86400,
-                        'Path'      => '/',
+                    setcookie('token', $token,[
+                        'expires' => time()+86400,
+                        'path'      => '/',
                         'domain'    => 'localhost:8888',
-                        'Secure'    => true,
-                        'HttpOnly'  => true,
-                        'SameSite'  => 'None'
-                    ]);*/
-                    $expires = time()+86400;
-                    header ("Set-Cookie: token=$token; expires=$expires;path=/; domain=localhost:8888; secure=true; httponly=true; samesite=None");
-                    
+                        'secure'    => true,
+                        'httponly'  => true,
+                        'samesite'  => 'None'
+                    ]);
                 $returnData = [
                     'code'      => 200,
                     'message'   => 'Success',
