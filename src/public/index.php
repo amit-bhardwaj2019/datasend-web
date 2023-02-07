@@ -30,15 +30,18 @@ $container['db'] = function ($c) {
     return $pdo;
 };
 
-$app->get('/hello/{name}', function (Request $request, Response $response, array $args) {
-    var_dump($this->db);
-    $name = $args['name'];
-    $response->getBody()->write("Hello, $name");
-
-    return $response;
+$app->group('/api', function () {
+    $this->get('/hello/{name}', function (Request $request, Response $response, array $args) {
+        var_dump($this->db);
+        $name = $args['name'];
+        $response->getBody()->write("Hello, $name");
+    
+        return $response;
+    });
+    
+    $this->post('/login', \App\Controller\UserController::class.':login');
+    
+    $this->post('/auth', \App\Controller\UserController::class.':verifyAuthenticationPin');
 });
 
-$app->post('/login', \App\Controller\UserController::class.':login');
-
-$app->post('/auth', \App\Controller\UserController::class.':verifyAuthenticationPin');
 $app->run();
