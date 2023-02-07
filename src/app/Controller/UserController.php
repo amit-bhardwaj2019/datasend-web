@@ -14,12 +14,11 @@ class UserController {
     public function __construct(ContainerInterface $ci)
     {
         $this->ci = $ci;
-        
+        $this->userGateway = new UserGateway($this->ci->get('db'));
     }
     public function login(Request $request, Response $response)
     {
-        $arrData = $request->getParsedBody();
-        $this->userGateway = new UserGateway($this->ci->get('db'));
+        $arrData = $request->getParsedBody();        
         
         //
         $result = $this->userGateway->findByEmail($arrData['email']);
@@ -35,13 +34,14 @@ class UserController {
                         "name" => $result[0]['name'],
                         "phone" => $result[0]['phone']
                     ]);
-                
+                    $b = setcookie('token', $token,time()+86400, '/', 'localhost:8888', false, true);
                 $returnData = [
                     'code'      => 200,
                     'message'   => 'Success',
-                    'token'     => $token,
-                    'pin_auth'  => $result[0]['pin_auth'] === "1" ? true : false
+                    'pin_auth'  => $result[0]['pin_auth'] === "1" ? true : false,
+                    'cookie'    => $b
                 ];
+                
                 $res['body'] = json_encode($returnData);
             } else {
                 // wrong pass
@@ -62,6 +62,56 @@ class UserController {
         }
         $response->getBody()->write($res['body']);
         return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function verifyAuthenticationPin(Request $request, Response $response)
+    {
+        var_dump(getallheaders());
+        $arrData = $request->getParsedBody();
+        // verify token 
+        
+        $data = $this->userGateway->getAuthPinRelatedData($arrData['userid']);
+		
+		if(!empty($data))
+		{
+			$pin_hashed = $data[0]['pin'];
+			$email      = $data[0]['email'];
+			
+			$pwd_peppered = hash_hmac("sha256", $arrData['pin'], getenv('DROOM_PIN_SALT'));
+            
+			
+			if ($pin_hashed==$pwd_peppered) {
+				
+				$this->userGateway->insertIntoTableLog($arrData['userid'], 'Login');				
+                $this->userGateway->insertIntoTableUserLog($email);
+
+                $returnData = [
+                    'code'      => 200,
+                    'message'   => 'Success'
+                ];
+                $res['body'] = json_encode($returnData);
+				
+			}
+			else{
+				$returnData = [
+                    'code' => 400,
+                    'message' => 'Please enter valid pin.'
+                ];
+                $res['body'] = json_encode($returnData);
+			}
+            
+		} else {
+            $returnData = [
+                'code' => 400,
+                'message' => 'Please enter valid pin.'
+            ];
+            $res['body'] = json_encode($returnData);
+            
+        }
+
+        $response->getBody()->write($res['body']);
+        return $response->withHeader('Content-Type', 'application/json');
+
     }
 }
 ?>

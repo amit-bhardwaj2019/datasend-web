@@ -39,4 +39,6 @@ $app->get('/hello/{name}', function (Request $request, Response $response, array
 });
 
 $app->post('/login', \App\Controller\UserController::class.':login');
+
+$app->post('/auth', \App\Controller\UserController::class.':verifyAuthenticationPin');
 $app->run();
