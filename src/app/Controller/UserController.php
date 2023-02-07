@@ -38,7 +38,7 @@ class UserController {
                         'expires' => time()+86400,
                         'path'      => '/',
                         'domain'    => 'localhost:8888',
-                        'secure'    => true,
+                        'secure'    => false,
                         'httponly'  => true,
                         'samesite'  => 'None'
                     ]);
