@@ -46,13 +46,29 @@ $app->add(function ($req, $res, $next) {
 
 $app->group('/api', function () {
     $this->get('/hello/{name}', function (Request $request, Response $response, array $args) {
-        var_dump($this->db);
+        
         $name = $args['name'];
+        setcookie('act', 'abs1234', time()+3600,'/','localhost', false, true);
+        $arrOptions = [
+            'expires' => time()+3600,
+            'path'      => '/',
+            'domain'    => 'localhost',
+            'secure'    => false,
+            'httponly'  => true,
+            'samesite'  => 'None'
+        ];
+        setcookie('qwe', 'qwer123',time()+3600, '/', 'localhost', false, true);
         $response->getBody()->write("Hello, $name");
     
         return $response;
     });
     
+    $this->get('/test', function(Request $request, Response $response) {
+        $cookie = $_COOKIE['act'];
+        $cookie2 = $_COOKIE['qwe'];
+        $response->getBody()->write('Hello '. $cookie . ' '. $cookie2);
+        return $response;
+    });
     $this->post('/login', \App\Controller\UserController::class.':login');
     
     $this->post('/auth', \App\Controller\UserController::class.':verifyAuthenticationPin');
