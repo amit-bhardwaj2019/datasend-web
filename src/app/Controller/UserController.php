@@ -43,7 +43,7 @@ class UserController {
                         'samesite'  => 'None'
                     ]);
                     */
-                    setcookie('token', $token, time()+86400, '/', 'localhost', false, true);
+                    setcookie('token', $token, time()+86400, '/', '.softdemonew.info', false, true);
                 $returnData = [
                     'code'      => 200,
                     'message'   => 'Success',

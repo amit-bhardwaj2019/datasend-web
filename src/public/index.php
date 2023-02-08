@@ -58,7 +58,7 @@ $app->group('/api', function () {
             'httponly'  => true,
             'samesite'  => 'None'
         ];
-        setcookie('qwe', 'qwer123',time()+3600, '/', 'localhost', false, true);
+        setcookie('qwe', 'qwer123',time()+3600, '/', '.softdemonew.info', false, true);
         $response->getBody()->write("Hello, $name");
     
         return $response;
