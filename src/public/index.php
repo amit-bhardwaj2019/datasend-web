@@ -41,6 +41,7 @@ $app->add(function ($req, $res, $next) {
             ->withHeader('Access-Control-Allow-Credentials', true
             )
             ->withAddedHeader('Access-Control-Allow-Origin', 'http://localhost:3000')
+            ->withAddedHeader('Access-Control-Allow-Origin', 'http://datasend.softdemonew.info')
             ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
             ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
 });
@@ -49,7 +50,7 @@ $app->group('/api', function () {
     $this->get('/hello/{name}', function (Request $request, Response $response, array $args) {
         
         $name = $args['name'];
-        setcookie('act', 'abs1234', time()+3600,'/','localhost', false, true);
+        setcookie('act', 'abs1234', time()+3600,'/','.softdemonew.info', false, true);
         $arrOptions = [
             'expires' => time()+3600,
             'path'      => '/',

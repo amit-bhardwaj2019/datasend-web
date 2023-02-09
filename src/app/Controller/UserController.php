@@ -74,7 +74,7 @@ class UserController {
 
     public function verifyAuthenticationPin(Request $request, Response $response)
     {
-        var_dump(getallheaders());
+        var_dump($_COOKIE['token']);
         $arrData = $request->getParsedBody();
         // verify token 
         
