@@ -16,6 +16,11 @@ class UserController {
         $this->ci = $ci;
         $this->userGateway = new UserGateway($this->ci->get('db'));
     }
+
+    public function index(Response $response)
+    {
+
+    }
     public function login(Request $request, Response $response)
     {
         $arrData = $request->getParsedBody();        
@@ -34,16 +39,8 @@ class UserController {
                         "name" => $result[0]['name'],
                         "phone" => $result[0]['phone']
                     ]);
-                /*    setcookie('token', $token,[
-                        'expires' => time()+86400,
-                        'path'      => '/',
-                        'domain'    => 'localhost',
-                        'secure'    => false,
-                        'httponly'  => true,
-                        'samesite'  => 'None'
-                    ]);
-                    */
-                    setcookie('token', $token, time()+86400, '/', '.softdemonew.info', false, true);
+                
+                    setcookie('token', $token, time()+86400, '/', '.softdemonew.info:8888', false, true);
                 $returnData = [
                     'code'      => 200,
                     'message'   => 'Success',
