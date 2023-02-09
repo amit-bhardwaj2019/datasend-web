@@ -48,7 +48,7 @@ $app->group('/api', function () {
     $this->get('/hello/{name}', function (Request $request, Response $response, array $args) {
         
         $name = $args['name'];
-        setcookie('act', 'abs1234', time()+3600,'/','.softdemonew.info', false, true);
+        setcookie('act', 'abs1234', time()+3600,'/','softdemonew.info', false, true);
         $arrOptions = [
             'expires' => time()+3600,
             'path'      => '/',
@@ -57,7 +57,7 @@ $app->group('/api', function () {
             'httponly'  => true,
             'samesite'  => 'None'
         ];
-        setcookie('qwe', 'qwer123',time()+3600, '/', '.softdemonew.info', false, true);
+        setcookie('qwe', 'qwer123',time()+3600, '/', 'softdemonew.info', false, true);
         $response->getBody()->write("Hello, $name");
     
         return $response;
@@ -73,7 +73,7 @@ $app->group('/api', function () {
     
     $this->post('/auth', \App\Controller\UserController::class.':verifyAuthenticationPin');
 
-    $this->get('/users', \App\Controller\UserController::class.'index');
+    $this->post('/user', \App\Controller\UserController::class.'store');
 });
 
 $app->run();

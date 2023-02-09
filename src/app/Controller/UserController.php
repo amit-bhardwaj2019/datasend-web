@@ -17,7 +17,7 @@ class UserController {
         $this->userGateway = new UserGateway($this->ci->get('db'));
     }
 
-    public function index(Response $response)
+    public function store(Request $request, Response $response)
     {
 
     }
