@@ -175,11 +175,12 @@ class UserController {
         // get user id from jwt 
         $user_id = $decoded_object->data->id;
         $user_details = $this->userGateway->find($user_id);
-        $user_type = $user_details[0]['userlevel'] === 1 ? 'user' : 'subuser';
+        $type_id = (int)$user_details[0]['userlevel'];
+        $user_type = $type_id === 1 ? 'user' : 'subuser';
         $data = [
             'name' => $user_details[0]['name'],
             'email' => $user_details[0]['email'],
-            'type_id'   => $user_details[0]['userlevel'],
+            'type_id'   => $type_id,
             'type'   => $user_type
         ];
         $returnData = [
