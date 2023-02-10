@@ -32,7 +32,7 @@ class UserGateway {
     {
         $statement = "
             SELECT 
-            id, addedBy, name, phone, email
+            id, userlevel, addedBy, name, phone, email
             FROM
                 tbl_user
             WHERE id = ?;

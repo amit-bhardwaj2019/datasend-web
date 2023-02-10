@@ -3,7 +3,7 @@
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 use Dotenv\Dotenv;
-
+use App\Controller\UserController;
 require __DIR__.'/../../vendor/autoload.php';
 
 $dotenv = new Dotenv(__DIR__. '/../../');
@@ -69,11 +69,15 @@ $app->group('/api', function () {
         $response->getBody()->write('Hello '. $cookie . ' '. $cookie2);
         return $response;
     });
-    $this->post('/login', \App\Controller\UserController::class.':login');
+    $this->post('/login', UserController::class.':login');
     
-    $this->post('/auth', \App\Controller\UserController::class.':verifyAuthenticationPin');
+    $this->post('/auth', UserController::class.':verifyAuthenticationPin');
 
-    $this->post('/user', \App\Controller\UserController::class.'store');
+    $this->get('/user-details', UserController::class.':userDetails');
+
+    $this->get('/users', UserController::class.':show');
+
+    $this->post('/users', UserController::class.':store');
 });
 
 $app->run();
