@@ -48,7 +48,7 @@ class UserController {
                         "phone" => $result[0]['phone']
                     ]);
                 
-                    setcookie('token', $token, time()+86400, '/', 'softdemonew.info', false, true);
+                    // setcookie('token', $token, time()+86400, '/', 'softdemonew.info', false, true);
                 $returnData = [
                     'code'      => 200,
                     'message'   => 'Success',
