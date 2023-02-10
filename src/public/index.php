@@ -71,7 +71,7 @@ $app->group('/api', function () {
     });
     $this->post('/login', UserController::class.':login');
     
-    $this->post('/auth', UserController::class.':verifyAuthenticationPin');
+    $this->post('/auth', UserController::class.':verifyPin');
 
     $this->get('/user-details', UserController::class.':userDetails');
 

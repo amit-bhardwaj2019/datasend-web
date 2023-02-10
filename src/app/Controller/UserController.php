@@ -78,7 +78,7 @@ class UserController {
         return $response->withHeader('Content-Type', 'application/json');
     }
 
-    public function verifyAuthenticationPin(Request $request, Response $response)
+    public function verifyPin(Request $request, Response $response)
     {
         try {
             if($request->hasHeader('HTTP_AUTHORIZATION')) 
