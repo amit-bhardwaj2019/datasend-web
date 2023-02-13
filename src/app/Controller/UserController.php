@@ -6,9 +6,8 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Container\ContainerInterface;
 use App\TableGateways\UserGateway;
 use App\Classes\JwtHandler;
-use Carbon\Carbon;
 use Exception;
-
+use Valitron\Validator;
 class UserController {
 
     private $ci;    
@@ -21,12 +20,110 @@ class UserController {
 
     public function show(Request $request, Response $response)
     {
-        $user = $this->userGateway->find(345);
-        return $response->getBody()->write('hello');
+        try {
+            if($request->hasHeader('HTTP_AUTHORIZATION')) 
+            {
+                $token = str_replace('Bearer ', '', $request->getHeaderLine('HTTP_AUTHORIZATION'));
+                $jwt = new JwtHandler();
+                $decoded_object = $jwt->jwtDecodeData($token);
+                if(gettype($decoded_object) === "string") 
+                    throw new \Exception('Token is Expired!');
+                else {
+                    if($decoded_object->iss !== getenv('APP_URL')) throw new \Exception('Domain mismatch');
+                }
+            }
+
+        } catch(\Exception $e) {
+            $returnData = [
+                'code' => 400,
+                'message' => $e->getMessage()
+            ];
+            $res['body']    = json_encode($returnData);
+            $response->getBody()->write($res['body']);
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+        // get user id from jwt 
+        $user_id = $decoded_object->data->id;
+        $user_details = $this->userGateway->find($user_id);
+        $arrData = [
+            'name'		        => $user_details['name'],
+            'address1'	        => $user_details['address1'],
+            'address2'	        => $user_details['address2'],
+            'city'		        => $user_details['city'],
+            'country'	        => $user_details['country'],
+            'zipcode'	        => $user_details['zipcode'],
+            'email'		        => $user_details['email'],		
+            'phone'		        => $user_details['phone'],            
+            'uploadfolder'  => (int)$user_details['javauploadfolder'],
+            'totalspace'        => $user_details['totalspace'],
+        ];
+        $returnData = [
+            'code'      => 200,
+            'success'   => true,
+            'user'      => $arrData
+        ];
+        $res['body']    = json_encode($returnData);
+        $response->getBody()->write($res['body']);
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
-    public function store(Request $request, Response $response)
+    public function update(Request $request, Response $response)
     {
+        try {
+            if($request->hasHeader('HTTP_AUTHORIZATION')) 
+            {
+                $token = str_replace('Bearer ', '', $request->getHeaderLine('HTTP_AUTHORIZATION'));
+                $jwt = new JwtHandler();
+                $decoded_object = $jwt->jwtDecodeData($token);
+                if(gettype($decoded_object) === "string") 
+                    throw new \Exception('Token is Expired!');
+                else {
+                    if($decoded_object->iss !== getenv('APP_URL')) throw new \Exception('Domain mismatch');
+                }
+            }
+
+        } catch(\Exception $e) {
+            $returnData = [
+                'code' => 400,
+                'message' => $e->getMessage()
+            ];
+            $res['body']    = json_encode($returnData);
+            $response->getBody()->write($res['body']);
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+        // get user id from jwt 
+        $user_id = $decoded_object->data->id;
+        $data = $request->getParsedBody();
+
+        $validate = new Validator($data);
+        $validate->rule('required', ['name']);
+        if($validate->validate()) {
+            $ret = $this->userGateway->update($user_id, $data);
+            if(isset($ret)) {
+                $response->getBody()->write($ret);
+                return $response->withHeader('Content-Type', 'application/json');
+            } else {
+                $returnData = [
+                    'code'      => 200,
+                    'success'   => true,
+                    'message'   => 'Record updated successfully!'
+                ];
+                $res['body']    = json_encode($returnData);
+                $response->getBody()->write($res['body']);
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+        } else {
+            // Errors
+            $returnData = [
+                'code'  => 400,
+                'errors'   => $validate->errors() 
+            ];
+            $res['body']    = json_encode($returnData);
+            $response->getBody()->write($res['body']);
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        
 
     }
     public function login(Request $request, Response $response)
@@ -175,11 +272,11 @@ class UserController {
         // get user id from jwt 
         $user_id = $decoded_object->data->id;
         $user_details = $this->userGateway->find($user_id);
-        $type_id = (int)$user_details[0]['userlevel'];
+        $type_id = (int)$user_details['userlevel'];
         $user_type = $type_id === 1 ? 'user' : 'subuser';
         $data = [
-            'name' => $user_details[0]['name'],
-            'email' => $user_details[0]['email'],
+            'name' => $user_details['name'],
+            'email' => $user_details['email'],
             'type_id'   => $type_id,
             'type'   => $user_type
         ];

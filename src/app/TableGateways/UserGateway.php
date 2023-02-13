@@ -32,7 +32,7 @@ class UserGateway {
     {
         $statement = "
             SELECT 
-            id, userlevel, addedBy, name, phone, email
+            *
             FROM
                 tbl_user
             WHERE id = ?;
@@ -41,7 +41,7 @@ class UserGateway {
         try {
             $statement = $this->db->prepare($statement);
             $statement->execute(array($id));
-            $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+            $result = $statement->fetch(\PDO::FETCH_ASSOC);
             return $result;
         } catch (\PDOException $e) {
             exit($e->getMessage());
@@ -123,4 +123,37 @@ class UserGateway {
         }
     }
 
+    public function update(int $user_id, Array $data)
+    {
+        $statement = "
+        UPDATE tbl_user SET name=:name, address1=:add1, address2=:add2, city=:city,country=:country,zipcode=:zip,phone=:phone, email=:email, javauploadfolder=:upd WHERE id=:user_id
+        ";
+        try {
+            $obj = $this->db->prepare($statement);
+            
+            $obj->bindParam(':name', $data['name'], \PDO::PARAM_STR);
+            $obj->bindParam(':add1', $data['address1'], \PDO::PARAM_STR);
+            $obj->bindParam(':add2', $data['address2'], \PDO::PARAM_STR);
+            $obj->bindParam(':city', $data['city'], \PDO::PARAM_STR);
+            $obj->bindParam(':country', $data['country'], \PDO::PARAM_STR);
+            $obj->bindParam(':zip', $data['zipcode'], \PDO::PARAM_STR);
+            $obj->bindParam(':phone', $data['phone'], \PDO::PARAM_STR);
+            $obj->bindParam(':email', $data['email'], \PDO::PARAM_STR);
+            $obj->bindParam(':upd', $data['uploadfolder'], \PDO::PARAM_STR);
+            $obj->bindParam(':user_id', $user_id, \PDO::PARAM_INT);
+            $obj->execute();
+            
+        } 
+        catch(\PDOException $ex) {
+            $returnData = [
+                'code' => 400,
+                'message' => $ex->getMessage()
+            ];
+            $res['body']    = json_encode($returnData);
+            return $res['body'];
+        }
+		$action = getenv('UPDATE_PROFILE_MSG');
+
+		$this->insertIntoTableLog($user_id, $action);
+    }
 }

@@ -77,7 +77,7 @@ $app->group('/api', function () {
 
     $this->get('/users', UserController::class.':show');
 
-    $this->post('/users', UserController::class.':store');
+    $this->post('/users', UserController::class.':update');
 });
 
 $app->run();
