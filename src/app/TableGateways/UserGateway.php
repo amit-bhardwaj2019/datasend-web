@@ -6,7 +6,7 @@ use PDO;
 class UserGateway {
 
     private $db = null;
-    private $returnData = [
+    private $returnErrors = [
         "code"  => 400
     ];
 
@@ -150,8 +150,11 @@ class UserGateway {
             
         } 
         catch(\PDOException $ex) {            
-            $this->returnData['errors'] = $ex->getMessage();
-            $res['body']    = json_encode($this->returnData);
+            $this->returnErrors['errors'] = $ex->getMessage();
+            $res['body']    = json_encode($this->returnErrors);
+            $this->returnErrors = [
+                "code"  => 400
+            ];
             return $res['body'];
         }
 		$action = getenv('UPDATE_PROFILE_MSG');
@@ -193,8 +196,11 @@ class UserGateway {
             $obj->execute();               
             return $obj->rowCount(); 
         } catch(\PDOException $e) {            
-            $this->returnData['errors'] = $e->getMessage();
-            $res['body']    = json_encode($this->returnData);
+            $this->returnErrors['errors'] = $e->getMessage();
+            $res['body']    = json_encode($this->returnErrors);
+            $this->returnErrors = [
+                "code"  => 400
+            ];
             return $res['body'];
         }
     }

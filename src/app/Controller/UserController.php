@@ -93,6 +93,9 @@ class UserController {
         }   else {
             $this->returnErrors['errors'] = "Invalid login details.";
             $response->getBody()->write(json_encode($this->returnErrors));
+            $this->returnErrors = [
+                "code"  => 400
+            ];
             return $response->withHeader('Content-Type', 'application/json');
         }
     }
@@ -428,6 +431,9 @@ class UserController {
                 
                 $this->returnErrors['errors'] = "Your old password is incorrect.";
                 $res['body']    = json_encode($this->returnErrors);
+                $this->returnErrors = [
+                    "code"  => 400
+                ];
                 $response->getBody()->write($res['body']);
                 return $response->withHeader('Content-Type', 'application/json');
             } else {
@@ -436,11 +442,18 @@ class UserController {
                 if($res > 0) {                    
                     $this->returnData['message'] = "Successfully updated!";
                     $r = json_encode($this->returnData);
+                    $this->returnData = [
+                        "code"      => 200,
+                        "success"   => true
+                    ];
                     $response->getBody()->write($r);
                     return $response->withHeader('Content-Type', 'application/json');
                 } else {                    
                     $this->returnErrors['errors'] = "Password is incorrect!";
                     $response->getBody()->write(json_encode($this->returnErrors));
+                    $this->returnErrors = [
+                        "code"  => 400
+                    ];
                     return $response->withHeader('Content-Type', 'application/json');
                 }
             }
@@ -450,6 +463,9 @@ class UserController {
             
             $this->returnErrors['errors'] = $validate->errors();
             $r    = json_encode($this->returnErrors);
+            $this->returnErrors = [
+                "code"  => 400
+            ];
             $response->getBody()->write($r);
             return $response->withHeader('Content-Type', 'application/json');
         }
