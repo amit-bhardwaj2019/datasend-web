@@ -7,6 +7,7 @@ use App\TableGateways\UserGateway;
 class Common {
     private $ci;    
     private $userGateway;
+    const INVALID_CREDENTIAL = "Invalid Token!";
     public function __construct(ContainerInterface $ci)
     {
         $this->ci = $ci;

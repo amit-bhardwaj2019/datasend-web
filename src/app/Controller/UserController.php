@@ -57,7 +57,7 @@ class UserController {
         if(!is_null($this->user_id)) {
             $user_id = $this->user_id;
             $user_details = $this->userGateway->find($user_id);
-            if($user_details['userlevel'] === 1) {
+            if((int)$user_details['userlevel'] === 1) {
                 $arrData = [
                     'name'		        => $user_details['name'],
                     'address1'	        => $user_details['address1'],
@@ -91,7 +91,7 @@ class UserController {
             $response->getBody()->write($res['body']);
             return $response->withHeader('Content-Type', 'application/json');
         }   else {
-            $this->returnErrors['errors'] = "Invalid login details.";
+            $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
             $response->getBody()->write(json_encode($this->returnErrors));
             $this->returnErrors = [
                 "code"  => 400
@@ -102,324 +102,261 @@ class UserController {
 
     public function update(Request $request, Response $response)
     {
-        try {
-            if($request->hasHeader('HTTP_AUTHORIZATION')) 
-            {
-                $token = str_replace('Bearer ', '', $request->getHeaderLine('HTTP_AUTHORIZATION'));
-                $jwt = new JwtHandler();
-                $decoded_object = $jwt->jwtDecodeData($token);
-                if(gettype($decoded_object) === "string") 
-                    throw new \Exception('Token is Expired!');
-                else {
-                    if($decoded_object->iss !== getenv('APP_URL')) throw new \Exception('Domain mismatch');
-                }
-            }
-
-        } catch(\Exception $e) {
-            $returnData = [
-                'code' => 400,
-                'message' => $e->getMessage()
-            ];
-            $res['body']    = json_encode($returnData);
-            $response->getBody()->write($res['body']);
-            return $response->withHeader('Content-Type', 'application/json');
-        }
-        // get user id from jwt 
-        $user_id = $decoded_object->data->id;
-        $user_details = $this->userGateway->find($user_id);
-        $data = $request->getParsedBody();
-        if($user_details['userlevel'] === 2 && is_null($data['uploadfolder'])) {
-            $data['uploadfolder']   = "1";
-        }
         
-        $validate = new Validator($data);
-        $validate->rule('required', ['name']);
-        if($validate->validate()) {
-            $ret = $this->userGateway->update($user_id, $data);
-            if(isset($ret)) {
-                $response->getBody()->write($ret);
-                return $response->withHeader('Content-Type', 'application/json');
+        // get user id from jwt 
+        if(!is_null($this->user_id)) {
+            $user_id = $this->user_id;
+            $user_details = $this->userGateway->find($user_id);
+            $data = $request->getParsedBody();
+            if($user_details['userlevel'] === 2 && is_null($data['uploadfolder'])) {
+                $data['uploadfolder']   = "1";
+            }
+            
+            $validate = new Validator($data);
+            $validate->rule('required', ['name']);
+            if($validate->validate()) {
+                $ret = $this->userGateway->update($user_id, $data);
+                if(isset($ret)) {
+                    $response->getBody()->write($ret);
+                    return $response->withHeader('Content-Type', 'application/json');
+                } else {
+                    $returnData = [
+                        'code'      => 200,
+                        'success'   => true,
+                        'message'   => 'Record updated successfully!'
+                    ];
+                    $res['body']    = json_encode($returnData);
+                    $response->getBody()->write($res['body']);
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
             } else {
+                // Errors
                 $returnData = [
-                    'code'      => 200,
-                    'success'   => true,
-                    'message'   => 'Record updated successfully!'
+                    'code'  => 400,
+                    'errors'   => $validate->errors() 
                 ];
                 $res['body']    = json_encode($returnData);
                 $response->getBody()->write($res['body']);
                 return $response->withHeader('Content-Type', 'application/json');
             }
-        } else {
-            // Errors
-            $returnData = [
-                'code'  => 400,
-                'errors'   => $validate->errors() 
-            ];
-            $res['body']    = json_encode($returnData);
-            $response->getBody()->write($res['body']);
-            return $response->withHeader('Content-Type', 'application/json');
-        }
 
-        
+        }   else {
+            $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
+            $response->getBody()->write(json_encode($this->returnErrors));
+            $this->returnErrors = [
+                "code"  => 400
+            ];
+            return $response->withHeader('Content-Type', 'application/json');             
+        }
 
     }
     
     public function verifyPin(Request $request, Response $response)
     {
-        try {
-            if($request->hasHeader('HTTP_AUTHORIZATION')) 
-            {
-                $token = str_replace('Bearer ', '', $request->getHeaderLine('HTTP_AUTHORIZATION'));
-                $jwt = new JwtHandler();
-                $decoded_object = $jwt->jwtDecodeData($token);
-                if(gettype($decoded_object) === "string") 
-                    throw new \Exception('Token is Expired!');
-                else {
-                    if($decoded_object->iss !== getenv('APP_URL')) throw new \Exception('Domain mismatch');
-                }
-            }
-
-        } catch(\Exception $e) {
-            $returnData = [
-                'code' => 400,
-                'message' => $e->getMessage()
-            ];
-            $res['body']    = json_encode($returnData);
-            $response->getBody()->write($res['body']);
-            return $response->withHeader('Content-Type', 'application/json');
-        }
+        
         $arrData = $request->getParsedBody();
         // verify token 
-        $user_id = $decoded_object->data->id;
-        $data = $this->userGateway->getAuthPinRelatedData($user_id);
-		
-		if(!empty($data))
-		{
-			$pin_hashed = $data[0]['pin'];
-			$email      = $data[0]['email'];
-			
-			$pwd_peppered = hash_hmac("sha256", $arrData['pin'], getenv('DROOM_PIN_SALT'));
+        if(!is_null($this->user_id)) {
+            $user_id = $this->user_id;
+            $data = $this->userGateway->getAuthPinRelatedData($user_id);
             
-			
-			if ($pin_hashed==$pwd_peppered) {
-				
-				$this->userGateway->insertIntoTableLog($user_id, 'Login');				
-                $this->userGateway->insertIntoTableUserLog($email);
+            if(!empty($data))
+            {
+                $pin_hashed = $data[0]['pin'];
+                $email      = $data[0]['email'];
+                
+                $pwd_peppered = hash_hmac("sha256", $arrData['pin'], getenv('DROOM_PIN_SALT'));
+                
+                
+                if ($pin_hashed==$pwd_peppered) {
+                    
+                    $this->userGateway->insertIntoTableLog($user_id, 'Login');				
+                    $this->userGateway->insertIntoTableUserLog($email);
 
+                    $returnData = [
+                        'code'      => 200,
+                        'message'   => 'Success',
+                        'success'   => true
+                    ];
+                    $res['body'] = json_encode($returnData);
+                    
+                }
+                else{
+                    $returnData = [
+                        'code' => 400,
+                        'message' => 'Please enter valid pin.'
+                    ];
+                    $res['body'] = json_encode($returnData);
+                }
+                
+            } else {
                 $returnData = [
-                    'code'      => 200,
-                    'message'   => 'Success',
-                    'success'   => true
-                ];
-                $res['body'] = json_encode($returnData);
-				
-			}
-			else{
-				$returnData = [
                     'code' => 400,
                     'message' => 'Please enter valid pin.'
                 ];
                 $res['body'] = json_encode($returnData);
-			}
-            
-		} else {
-            $returnData = [
-                'code' => 400,
-                'message' => 'Please enter valid pin.'
+                
+            }
+            $response->getBody()->write($res['body']);
+            return $response->withHeader('Content-Type', 'application/json');
+        }   else {
+            $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
+            $response->getBody()->write(json_encode($this->returnErrors));
+            $this->returnErrors = [
+                "code"  => 400
             ];
-            $res['body'] = json_encode($returnData);
-            
+            return $response->withHeader('Content-Type', 'application/json');            
         }
-        $response->getBody()->write($res['body']);
-        return $response->withHeader('Content-Type', 'application/json');
     }
 
     public function userDetails(Request $request, Response $response)
-    {
-        try {
-            if($request->hasHeader('HTTP_AUTHORIZATION')) 
-            {
-                $token = str_replace('Bearer ', '', $request->getHeaderLine('HTTP_AUTHORIZATION'));
-                $jwt = new JwtHandler();
-                $decoded_object = $jwt->jwtDecodeData($token);
-                if(gettype($decoded_object) === "string") 
-                    throw new \Exception('Token is Expired!');
-                else {
-                    if($decoded_object->iss !== getenv('APP_URL')) throw new \Exception('Domain mismatch');
-                }
-            }
-
-        } catch(\Exception $e) {
+    {        
+        // get user id from jwt 
+        if(!is_null($this->user_id)) {
+            $user_id = $this->user_id;
+            $user_details = $this->userGateway->find($user_id);
+            $type_id = (int)$user_details['userlevel'];
+            $user_type = $type_id === 1 ? 'user' : 'subuser';
+            $data = [
+                'name' => $user_details['name'],
+                'email' => $user_details['email'],
+                'type_id'   => $type_id,
+                'type'   => $user_type
+            ];
             $returnData = [
-                'code' => 400,
-                'message' => $e->getMessage()
+                'code'      => 200,
+                'success'   => true,
+                'user' => $data
             ];
             $res['body']    = json_encode($returnData);
             $response->getBody()->write($res['body']);
             return $response->withHeader('Content-Type', 'application/json');
+        }   else {
+            $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
+            $response->getBody()->write(json_encode($this->returnErrors));
+            $this->returnErrors = [
+                "code"  => 400
+            ];
+            return $response->withHeader('Content-Type', 'application/json'); 
         }
-        // get user id from jwt 
-        $user_id = $decoded_object->data->id;
-        $user_details = $this->userGateway->find($user_id);
-        $type_id = (int)$user_details['userlevel'];
-        $user_type = $type_id === 1 ? 'user' : 'subuser';
-        $data = [
-            'name' => $user_details['name'],
-            'email' => $user_details['email'],
-            'type_id'   => $type_id,
-            'type'   => $user_type
-        ];
-        $returnData = [
-            'code'      => 200,
-            'success'   => true,
-            'user' => $data
-        ];
-        $res['body']    = json_encode($returnData);
-        $response->getBody()->write($res['body']);
-        return $response->withHeader('Content-Type', 'application/json');
     }
 
     public function dashboard(Request $request, Response $response)
-    {
-        try {
-            if($request->hasHeader('HTTP_AUTHORIZATION')) 
-            {
-                $token = str_replace('Bearer ', '', $request->getHeaderLine('HTTP_AUTHORIZATION'));
-                $jwt = new JwtHandler();
-                $decoded_object = $jwt->jwtDecodeData($token);
-                if(gettype($decoded_object) === "string") 
-                    throw new \Exception('Token is Expired!');
-                else {
-                    if($decoded_object->iss !== getenv('APP_URL')) throw new \Exception('Domain mismatch');
-                }
+    {        
+        // get user id from jwt 
+        if(!is_null(($this->user_id))) {
+            $user_id = $this->user_id;
+            $user_details = $this->userGateway->find($user_id);
+            $qa = $user_details['isaccess'];
+            
+            if((int)$user_details['userlevel'] === 1) {
+                $data = [
+                    "Edit Information"      => true,
+                    "Manage Root Folders"   => true,
+                    "Manage Files"          => true,
+                    "Manage Sub Users"      => true,
+                    "Manage Groups"         => true,
+                    "Change Password"       => true,
+                    "Set Pin"               => true,
+                    "Question and Answer Module"    => true,
+                    "Contact Support"       => true
+                ];
+            } else {
+                $data = [
+                    "Edit Information" => true,
+                    "Manage Files"          => true,
+                    "Change Password"       => true,
+                    "Set Pin"               => true,
+                    "Question and Answer Module" => $qa===1? true:false
+                ];
             }
 
-        } catch(\Exception $e) {
             $returnData = [
-                'code' => 400,
-                'message' => $e->getMessage()
+                "code"  => 200,
+                "details"   => $data
             ];
             $res['body']    = json_encode($returnData);
             $response->getBody()->write($res['body']);
             return $response->withHeader('Content-Type', 'application/json');
-        }
-        // get user id from jwt 
-        $user_id = $decoded_object->data->id;
-        $user_details = $this->userGateway->find($user_id);
-        $qa = $user_details['isaccess'];
-        
-        if((int)$user_details['userlevel'] === 1) {
-            $data = [
-                "Edit Information"      => true,
-                "Manage Root Folders"   => true,
-                "Manage Files"          => true,
-                "Manage Sub Users"      => true,
-                "Manage Groups"         => true,
-                "Change Password"       => true,
-                "Set Pin"               => true,
-                "Question and Answer Module"    => true,
-                "Contact Support"       => true
+        }   else {
+            $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
+            $response->getBody()->write(json_encode($this->returnErrors));
+            $this->returnErrors = [
+                "code"  => 400
             ];
-        } else {
-            $data = [
-                "Edit Information" => true,
-                "Manage Files"          => true,
-                "Change Password"       => true,
-                "Set Pin"               => true,
-                "Question and Answer Module" => $qa===1? true:false
-            ];
+            return $response->withHeader('Content-Type', 'application/json');
         }
-
-        $returnData = [
-            "code"  => 200,
-            "details"   => $data
-        ];
-        $res['body']    = json_encode($returnData);
-        $response->getBody()->write($res['body']);
-        return $response->withHeader('Content-Type', 'application/json');
     }
 
     public function changePassword(Request $request, Response $response)
     {
-        try {
-            if($request->hasHeader('HTTP_AUTHORIZATION')) 
-            {
-                $token = str_replace('Bearer ', '', $request->getHeaderLine('HTTP_AUTHORIZATION'));
-                $jwt = new JwtHandler();
-                $decoded_object = $jwt->jwtDecodeData($token);
-                if(gettype($decoded_object) === "string") 
-                    throw new \Exception('Token is Expired!');
-                else {
-                    if($decoded_object->iss !== getenv('APP_URL')) throw new \Exception('Domain mismatch');
-                }
-            }
-
-        } catch(\Exception $e) {
-            $returnData = [
-                'code' => 400,
-                'message' => $e->getMessage()
-            ];
-            $res['body']    = json_encode($returnData);
-            $response->getBody()->write($res['body']);
-            return $response->withHeader('Content-Type', 'application/json');
-        }
-        // get user id from jwt 
-        $user_id = $decoded_object->data->id;
-        $user_details = $this->userGateway->find($user_id);
-        $input_data = $request->getParsedBody();
-        $oldPass = $input_data['oldpass'];       
-        $newPass = $input_data['newpass'];
-        $confirmPass = $input_data['confirmpass'];
-        $validate = new Validator(['oldpass' => $oldPass,'newpass' => $newPass, 'confirmpass' => $confirmPass]);
         
-        $validate->rule('required', ['oldpass', 'newpass', 'confirmpass'])
-                ->rule('lengthMin','newpass', 9)
-                ->rule('equals', 'newpass', 'confirmpass');
-
-        if($validate->validate()) {
-            // password matches, here write the sql query to change
-            $row_count = $this->userGateway->checkOldPass($oldPass, $user_id);
+        // get user id from jwt 
+        if(!is_null($this->user_id)) {
+            $user_id = $this->user_id;
+            $user_details = $this->userGateway->find($user_id);
+            $input_data = $request->getParsedBody();
+            $oldPass = $input_data['oldpass'];       
+            $newPass = $input_data['newpass'];
+            $confirmPass = $input_data['confirmpass'];
+            $validate = new Validator(['oldpass' => $oldPass,'newpass' => $newPass, 'confirmpass' => $confirmPass]);
             
-            if($row_count === 0) {
+            $validate->rule('required', ['oldpass', 'newpass', 'confirmpass'])
+                    ->rule('lengthMin','newpass', 9)
+                    ->rule('equals', 'newpass', 'confirmpass');
+
+            if($validate->validate()) {
+                // password matches, here write the sql query to change
+                $row_count = $this->userGateway->checkOldPass($oldPass, $user_id);
                 
-                $this->returnErrors['errors'] = "Your old password is incorrect.";
-                $res['body']    = json_encode($this->returnErrors);
-                $this->returnErrors = [
-                    "code"  => 400
-                ];
-                $response->getBody()->write($res['body']);
-                return $response->withHeader('Content-Type', 'application/json');
-            } else {
-                $res = $this->userGateway->updatePass($newPass,$user_id);
-                
-                if($res > 0) {                    
-                    $this->returnData['message'] = "Successfully updated!";
-                    $r = json_encode($this->returnData);
-                    $this->returnData = [
-                        "code"      => 200,
-                        "success"   => true
-                    ];
-                    $response->getBody()->write($r);
-                    return $response->withHeader('Content-Type', 'application/json');
-                } else {                    
-                    $this->returnErrors['errors'] = "Password is incorrect!";
-                    $response->getBody()->write(json_encode($this->returnErrors));
+                if($row_count === 0) {
+                    
+                    $this->returnErrors['errors'] = "Your old password is incorrect.";
+                    $res['body']    = json_encode($this->returnErrors);
                     $this->returnErrors = [
                         "code"  => 400
                     ];
+                    $response->getBody()->write($res['body']);
                     return $response->withHeader('Content-Type', 'application/json');
+                } else {
+                    $res = $this->userGateway->updatePass($newPass,$user_id);
+                    
+                    if($res > 0) {                    
+                        $this->returnData['message'] = "Successfully updated!";
+                        $r = json_encode($this->returnData);
+                        $this->returnData = [
+                            "code"      => 200,
+                            "success"   => true
+                        ];
+                        $response->getBody()->write($r);
+                        return $response->withHeader('Content-Type', 'application/json');
+                    } else {                    
+                        $this->returnErrors['errors'] = "Password is incorrect!";
+                        $response->getBody()->write(json_encode($this->returnErrors));
+                        $this->returnErrors = [
+                            "code"  => 400
+                        ];
+                        return $response->withHeader('Content-Type', 'application/json');
+                    }
                 }
+
+
+            } else {            
+                
+                $this->returnErrors['errors'] = $validate->errors();
+                $r    = json_encode($this->returnErrors);
+                $this->returnErrors = [
+                    "code"  => 400
+                ];
+                $response->getBody()->write($r);
+                return $response->withHeader('Content-Type', 'application/json');
             }
-
-
-        } else {            
-            
-            $this->returnErrors['errors'] = $validate->errors();
-            $r    = json_encode($this->returnErrors);
+        }   else {
+            $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
+            $response->getBody()->write(json_encode($this->returnErrors));
             $this->returnErrors = [
                 "code"  => 400
             ];
-            $response->getBody()->write($r);
             return $response->withHeader('Content-Type', 'application/json');
         }
     }
