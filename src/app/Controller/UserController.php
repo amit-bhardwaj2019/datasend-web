@@ -25,7 +25,7 @@ class UserController {
         $this->ci = $ci;
         $this->userGateway = new UserGateway($this->ci->get('db'));        
 
-        try {
+       /* try {
             if($this->ci->get('request')->hasHeader('HTTP_AUTHORIZATION')) 
             {
                 $token = str_replace('Bearer ', '', $this->ci->get('request')->getHeaderLine('HTTP_AUTHORIZATION'));
@@ -48,11 +48,34 @@ class UserController {
                 "code"  => 400
             ];
             return $this->ci->get('response')->withHeader('Content-Type', 'application/json');
-        }
+        }*/
     }
 
     public function show(Request $request, Response $response)
-    {        
+    {     
+        try {
+            if($request->hasHeader('HTTP_AUTHORIZATION')) 
+            {
+                $token = str_replace('Bearer ', '', $request->getHeaderLine('HTTP_AUTHORIZATION'));
+                $jwt = new JwtHandler();
+                $decoded_object = $jwt->jwtDecodeData($token);
+                if(gettype($decoded_object) === "string") 
+                    throw new \Exception('Token is Expired!');
+                else {
+                    if($decoded_object->iss !== getenv('APP_URL')) throw new \Exception('Domain mismatch');
+                }
+                $this->user_id = $decoded_object->data->id;
+            }
+
+        } catch(\Exception $e) {
+            $returnData = [
+                'code' => 400,
+                'message' => $e->getMessage()
+            ];
+            $res['body']    = json_encode($returnData);
+            $response->getBody()->write($res['body']);
+            return $response->withHeader('Content-Type', 'application/json');
+        }   
         // get user id from jwt 
         if(!is_null($this->user_id)) {
             $user_id = $this->user_id;
