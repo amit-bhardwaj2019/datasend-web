@@ -1,9 +1,14 @@
 <?php
 namespace App\TableGateways;
 
+use PDO;
+
 class UserGateway {
 
     private $db = null;
+    private $returnData = [
+        "code"  => 400
+    ];
 
     public function __construct($db)
     {
@@ -144,16 +149,53 @@ class UserGateway {
             $obj->execute();
             
         } 
-        catch(\PDOException $ex) {
-            $returnData = [
-                'code' => 400,
-                'message' => $ex->getMessage()
-            ];
-            $res['body']    = json_encode($returnData);
+        catch(\PDOException $ex) {            
+            $this->returnData['errors'] = $ex->getMessage();
+            $res['body']    = json_encode($this->returnData);
             return $res['body'];
         }
 		$action = getenv('UPDATE_PROFILE_MSG');
 
 		$this->insertIntoTableLog($user_id, $action);
+    }
+
+    public function checkOldPass(String $password, int $id)
+    {        
+        $statement	= "
+        SELECT * FROM tbl_user WHERE password=:pass
+         AND id=:id
+         ";
+         $pass = md5($password);
+        try {
+            
+            $obj = $this->db->prepare($statement);
+            $obj->bindParam(':pass', $pass, PDO::PARAM_STR);
+            $obj->bindParam(':id', $id, PDO::PARAM_INT);
+            $obj->execute();
+            $result = $obj->rowCount();                        
+            return $result;
+        } catch (\PDOException $e) {
+            var_dump($e->getMessage());
+        }
+
+    }
+
+    public function updatePass(String $password, int $id)
+    {
+        $statement = "
+        UPDATE tbl_user SET password=:pass WHERE id=:id
+        ";
+        $pass = md5($password);
+        try{
+            $obj = $this->db->prepare($statement);
+            $obj->bindParam(':pass', $pass, PDO::PARAM_STR);
+            $obj->bindParam(':id', $id, PDO::PARAM_INT);
+            $obj->execute();               
+            return $obj->rowCount(); 
+        } catch(\PDOException $e) {            
+            $this->returnData['errors'] = $e->getMessage();
+            $res['body']    = json_encode($this->returnData);
+            return $res['body'];
+        }
     }
 }

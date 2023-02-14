@@ -4,6 +4,7 @@ use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 use Dotenv\Dotenv;
 use App\Controller\UserController;
+use App\Helper\Common;
 require __DIR__.'/../../vendor/autoload.php';
 
 $dotenv = new Dotenv(__DIR__. '/../../');
@@ -28,6 +29,11 @@ $container['db'] = function ($c) {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     return $pdo;
+};
+
+$container['common'] = function($c) {
+    $common = new Common($c);
+    return $common;
 };
 
 $app->options('/{routes:.+}', function ($request, $response, $args) {
@@ -78,6 +84,10 @@ $app->group('/api', function () {
     $this->get('/users', UserController::class.':show');
 
     $this->post('/users', UserController::class.':update');
+    
+    $this->get('/dashboard', UserController::class.':dashboard');
+
+    $this->post('/change-password', UserController::class.':changePassword');
 });
 
 $app->run();
