@@ -307,6 +307,7 @@ class UserController {
         $user_id = $decoded_object->data->id;
         $user_details = $this->userGateway->find($user_id);
         $qa = $user_details['isaccess'];
+        var_dump([$user_details['userlevel'], gettype($user_details['userlevel'])]);
         if($user_details['userlevel'] === 1) {
             $data = [
                 "Edit Information"      => true,
