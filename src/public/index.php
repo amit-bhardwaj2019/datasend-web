@@ -4,6 +4,7 @@ use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 use Dotenv\Dotenv;
 use App\Controller\UserController;
+use App\Controller\LoginController;
 use App\Helper\Common;
 require __DIR__.'/../../vendor/autoload.php';
 
@@ -75,7 +76,7 @@ $app->group('/api', function () {
         $response->getBody()->write('Hello '. $cookie . ' '. $cookie2);
         return $response;
     });
-    $this->post('/login', UserController::class.':login');
+    $this->post('/login', LoginController::class.':login');
     
     $this->post('/auth', UserController::class.':verifyPin');
 

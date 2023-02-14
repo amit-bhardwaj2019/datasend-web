@@ -25,7 +25,7 @@ class UserController {
         $this->ci = $ci;
         $this->userGateway = new UserGateway($this->ci->get('db'));        
 
-       /* try {
+        try {
             if($this->ci->get('request')->hasHeader('HTTP_AUTHORIZATION')) 
             {
                 $token = str_replace('Bearer ', '', $this->ci->get('request')->getHeaderLine('HTTP_AUTHORIZATION'));
@@ -48,34 +48,11 @@ class UserController {
                 "code"  => 400
             ];
             return $this->ci->get('response')->withHeader('Content-Type', 'application/json');
-        }*/
+        }
     }
 
     public function show(Request $request, Response $response)
-    {     
-        try {
-            if($request->hasHeader('HTTP_AUTHORIZATION')) 
-            {
-                $token = str_replace('Bearer ', '', $request->getHeaderLine('HTTP_AUTHORIZATION'));
-                $jwt = new JwtHandler();
-                $decoded_object = $jwt->jwtDecodeData($token);
-                if(gettype($decoded_object) === "string") 
-                    throw new \Exception('Token is Expired!');
-                else {
-                    if($decoded_object->iss !== getenv('APP_URL')) throw new \Exception('Domain mismatch');
-                }
-                $this->user_id = $decoded_object->data->id;
-            }
-
-        } catch(\Exception $e) {
-            $returnData = [
-                'code' => 400,
-                'message' => $e->getMessage()
-            ];
-            $res['body']    = json_encode($returnData);
-            $response->getBody()->write($res['body']);
-            return $response->withHeader('Content-Type', 'application/json');
-        }   
+    {        
         // get user id from jwt 
         if(!is_null($this->user_id)) {
             $user_id = $this->user_id;
@@ -186,55 +163,7 @@ class UserController {
         
 
     }
-    public function login(Request $request, Response $response)
-    {
-        $arrData = $request->getParsedBody();        
-        
-        //
-        $result = $this->userGateway->findByEmail($arrData['email']);
-        if(!empty($result[0]['email'])) {
-            $check_password = password_verify($result[0]['password'], password_hash(md5($arrData['password']), PASSWORD_DEFAULT));
-            if($check_password){
-
-                $jwt = new JwtHandler();
-                $token = $jwt->jwtEncodeData(
-                    getenv('APP_URL'),
-                    [
-                        "id"=> $result[0]['id'],
-                        "name" => $result[0]['name'],
-                        "phone" => $result[0]['phone']
-                    ]);
-                
-                    // setcookie('token', $token, time()+86400, '/', 'softdemonew.info', false, true);
-                $returnData = [
-                    'code'      => 200,
-                    'message'   => 'Success',
-                    'token'     => $token,
-                    'pin_auth'  => $result[0]['pin_auth'] === "1" ? true : false
-                ];
-                
-                $res['body'] = json_encode($returnData);
-            } else {
-                // wrong pass
-                $returnData = [
-                    'code' => 400,
-                    'message' => 'Please enter valid credentials'
-                ];
-                $res['body'] = json_encode($returnData);
-            }
-        } else {
-            // wrong credentials
-            $returnData = [
-                'code' => 400,
-                'message' => 'Please enter valid credentials'
-            ];
-            $res['body'] = json_encode($returnData);
-
-        }
-        $response->getBody()->write($res['body']);
-        return $response->withHeader('Content-Type', 'application/json');
-    }
-
+    
     public function verifyPin(Request $request, Response $response)
     {
         try {
