@@ -308,7 +308,7 @@ class UserController {
         $user_details = $this->userGateway->find($user_id);
         $qa = $user_details['isaccess'];
         var_dump([$user_details['userlevel'], gettype($user_details['userlevel'])]);
-        if($user_details['userlevel'] === 1) {
+        if((int)$user_details['userlevel'] === 1) {
             $data = [
                 "Edit Information"      => true,
                 "Manage Root Folders"   => true,
