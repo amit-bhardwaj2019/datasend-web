@@ -89,6 +89,8 @@ $app->group('/api', function () {
     $this->get('/dashboard', UserController::class.':dashboard');
 
     $this->post('/change-password', UserController::class.':changePassword');
+
+    $this->post('/change-pin', UserController::class.':changePin');
 });
 
 $app->run();

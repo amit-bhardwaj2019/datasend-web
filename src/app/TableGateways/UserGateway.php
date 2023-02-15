@@ -204,4 +204,27 @@ class UserGateway {
             return $res['body'];
         }
     }
+
+    public function updatePin(String $pin, int $id, $pin_auth)
+    {
+        $statement = "
+        UPDATE tbl_user SET pin=:pin,  pin_auth=:pin_auth WHERE id=:id
+        ";    
+        $pin_auth = $pin_auth === true ? '1' : '0';    
+        try{
+            $obj = $this->db->prepare($statement);
+            $obj->bindParam(':pin', $pin, PDO::PARAM_STR);
+            $obj->bindParam(':id', $id, PDO::PARAM_INT);
+            $obj->bindParam(':pin_auth', $pin_auth, PDO::PARAM_STR);
+            $obj->execute();               
+            return $obj->rowCount(); 
+        } catch(\PDOException $e) {            
+            $this->returnErrors['errors'] = $e->getMessage();
+            $res['body']    = json_encode($this->returnErrors);
+            $this->returnErrors = [
+                "code"  => 400
+            ];
+            return $res['body'];
+        }
+    }
 }
