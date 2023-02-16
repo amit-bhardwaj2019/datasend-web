@@ -227,4 +227,113 @@ class UserGateway {
             return $res['body'];
         }
     }
+
+    public function getByEmail($email)
+    {
+        $statement = "
+            SELECT 
+            id, addedBy, name, phone, email,password,pin_auth
+            FROM
+                tbl_user
+            WHERE email = ?
+        ";
+
+        try {
+            $statement = $this->db->prepare($statement);            
+            $statement->bindParam(1, $email);
+            $statement->execute();            
+            $result = $statement->fetch(\PDO::FETCH_ASSOC);
+            return $result;
+        } catch (\PDOException $e) {
+            exit($e->getMessage());
+        }    
+    }
+
+    public function updateToken($token, $id)
+    {
+        $statement = "
+        UPDATE tbl_user SET token=:token WHERE id=:id
+        ";
+        try{
+            $obj = $this->db->prepare($statement);
+            $obj->bindParam(':token', $token, PDO::PARAM_STR);
+            $obj->bindParam(':id', $id, PDO::PARAM_INT);
+            $obj->execute();               
+            return $obj->rowCount(); 
+        } catch(\PDOException $e) {            
+            $this->returnErrors['errors'] = $e->getMessage();
+            $res['body']    = json_encode($this->returnErrors);
+            $this->returnErrors = [
+                "code"  => 400
+            ];
+            return $res['body'];
+        }
+    }
+
+    public function updateResetPass($password, $id)
+    {
+        $statement = "
+        UPDATE tbl_user SET password=:pass, token=:emptok WHERE id=:id
+        ";
+        $emptok = '';
+        $pass = md5($password);
+        try{
+            $obj = $this->db->prepare($statement);
+            $obj->bindParam(':pass', $password, PDO::PARAM_STR);
+            $obj->bindParam(':emptok', $emptok, PDO::PARAM_STR);
+            $obj->bindParam(':id', $id, PDO::PARAM_INT);
+            $obj->execute();               
+            return $obj->rowCount(); 
+        } catch(\PDOException $e) {            
+            $this->returnErrors['errors'] = $e->getMessage();
+            $res['body']    = json_encode($this->returnErrors);
+            $this->returnErrors = [
+                "code"  => 400
+            ];
+            return $res['body'];
+        }
+    }
+
+    public function getByToken($token)
+    {
+        $statement = "
+            SELECT 
+            id, addedBy, name, phone, email,password,pin_auth
+            FROM
+                tbl_user
+            WHERE token=:token
+        ";
+
+        try {
+            $statement = $this->db->prepare($statement);            
+            $statement->bindParam(':token', $token, \PDO::PARAM_STR);
+            $statement->execute();            
+            $result = $statement->fetch(\PDO::FETCH_ASSOC);
+            return $result;
+        } catch (\PDOException $e) {
+            exit($e->getMessage());
+        }  
+    }
+
+    public function disablePin($id)
+    {
+        $statement = "
+        UPDATE tbl_user SET pin_auth=:pin_auth WHERE id=:id
+        ";    
+        $pin_auth = '0';    
+        try{
+            $obj = $this->db->prepare($statement);
+            $obj->bindParam(':id', $id, PDO::PARAM_INT);
+            $obj->bindParam(':pin_auth', $pin_auth, PDO::PARAM_STR);
+            $obj->execute();               
+            return $obj->rowCount(); 
+        } catch(\PDOException $e) {            
+            $this->returnErrors['errors'] = $e->getMessage();
+            $res['body']    = json_encode($this->returnErrors);
+            $this->returnErrors = [
+                "code"  => 400
+            ];
+            return $res['body'];
+        }
+    }
 }

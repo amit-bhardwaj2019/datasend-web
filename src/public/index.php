@@ -90,7 +90,14 @@ $app->group('/api', function () {
 
     $this->post('/change-password', UserController::class.':changePassword');
 
+    $this->get('/pin', UserController::class.':getPinStatus');
+
     $this->post('/change-pin', UserController::class.':changePin');
+
+    $this->post('/forgot-password', LoginController::class.':forgotPassword');
+
+    $this->post('/reset-password', LoginController::class.':resetPassword');
+
 });
 
 $app->run();

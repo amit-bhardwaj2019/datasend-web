@@ -321,8 +321,10 @@ class UserController {
                 } else {
                     $res = $this->userGateway->updatePass($newPass,$user_id);
                     
-                    if($res > 0) {                    
-                        $this->returnData['message'] = "Successfully updated!";
+                    if($res > 0) { 
+                        $action = 'Change his password';
+                        $this->userGateway->insertIntoTableLog($this->user_id, $action);
+                        $this->returnData['message'] = "Password has been changed successfully.";
                         $r = json_encode($this->returnData);
                         $this->returnData = [
                             "code"      => 200,
@@ -369,9 +371,11 @@ class UserController {
             $setpin     = $input_data['setpin'];
             $pin        = $input_data['pin'];
             $confirmpin = $input_data['confirmpin'];
+            if($setpin) {
             $validate = new Validator(['setpin' => $setpin,'pin' => $pin, 'confirmpin' => $confirmpin]);
             
-            $validate->rule('required', ['setpin', 'pin', 'confirmpin'])
+            $validate->rule('requiredWith', 'pin', 'setpin')
+                    ->rule('requiredWith', 'confirmpin', 'setpin')
                     ->rule('boolean', 'setpin')
                     ->rule('numeric', 'pin')
                     ->rule('numeric', 'confirmpin')
@@ -379,39 +383,83 @@ class UserController {
                     ->rule('max','pin', 999999)
                     ->rule('equals', 'pin', 'confirmpin');
 
-            if($validate->validate()) {
-                // passes validation check
-                $encrypted_pass = hash_hmac("sha256", $pin, getenv('DROOM_PIN_SALT'));
-                $row_affect = $this->userGateway->updatePin($encrypted_pass, $this->user_id, $setpin);
-                if($row_affect >0) {
-                    $action = 'Change Two Factor Authentication';
-                    $this->userGateway->insertIntoTableLog($this->user_id, $action);
-                    $this->returnData['message'] = "Pin has been updated successfully.";
-                    $r = json_encode($this->returnData);
-                    $this->returnData = [
-                        "code"      => 200,
-                        "success"   => true
-                    ];
-                    $response->getBody()->write($r);
-                    return $response->withHeader('Content-Type', 'application/json');
+                if($validate->validate()) {
+                    // passes validation check
+                    $encrypted_pass = hash_hmac("sha256", $pin, getenv('DROOM_PIN_SALT'));
+                    $row_affect = $this->userGateway->updatePin($encrypted_pass, $this->user_id, $setpin);
+                    if($row_affect >0) {
+                        $action = 'Change Two Factor Authentication';
+                        $this->userGateway->insertIntoTableLog($this->user_id, $action);
+                        $this->returnData['message'] = "Pin has been updated successfully.";
+                        $r = json_encode($this->returnData);
+                        $this->returnData = [
+                            "code"      => 200,
+                            "success"   => true
+                        ];
+                        $response->getBody()->write($r);
+                        return $response->withHeader('Content-Type', 'application/json');
+                    } else {
+                        $this->returnErrors['errors'] = "You have entered the same pin as old one.";
+                        $response->getBody()->write(json_encode($this->returnErrors));
+                        $this->returnErrors = [
+                            "code"  => 400
+                        ];
+                        return $response->withHeader('Content-Type', 'application/json');                                        
+                    }
                 } else {
-                    $this->returnErrors['errors'] = "You have entered the same pin as old one.";
-                    $response->getBody()->write(json_encode($this->returnErrors));
+                    // fail
+                    $this->returnErrors['errors'] = $validate->errors();
+                    $r    = json_encode($this->returnErrors);
                     $this->returnErrors = [
                         "code"  => 400
                     ];
-                    return $response->withHeader('Content-Type', 'application/json');                                        
+                    $response->getBody()->write($r);
+                    return $response->withHeader('Content-Type', 'application/json');
                 }
             } else {
-                // fail
-                $this->returnErrors['errors'] = $validate->errors();
-                $r    = json_encode($this->returnErrors);
-                $this->returnErrors = [
-                    "code"  => 400
-                ];
-                $response->getBody()->write($r);
-                return $response->withHeader('Content-Type', 'application/json');
+                $row_affect = $this->userGateway->disablePin($this->user_id);
+                    if($row_affect >0) {
+                        $action = 'Disable Two Factor Authentication';
+                        $this->userGateway->insertIntoTableLog($this->user_id, $action);
+                        $this->returnData['message'] = "Pin has been disabled successfully.";
+                        $r = json_encode($this->returnData);
+                        $this->returnData = [
+                            "code"      => 200,
+                            "success"   => true
+                        ];
+                        $response->getBody()->write($r);
+                        return $response->withHeader('Content-Type', 'application/json');
+                    } else {
+                        $this->returnErrors['errors'] = "Something went wrong.";
+                        $response->getBody()->write(json_encode($this->returnErrors));
+                        $this->returnErrors = [
+                            "code"  => 400
+                        ];
+                        return $response->withHeader('Content-Type', 'application/json');                                        
+                    }
             }
+        } else {
+            $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
+            $response->getBody()->write(json_encode($this->returnErrors));
+            $this->returnErrors = [
+                "code"  => 400
+            ];
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    public function getPinStatus(Request $request, Response $response)
+    {
+        if(!is_null($this->user_id)) {
+            $user_details = $this->userGateway->find($this->user_id);
+            $pin_auth = $user_details['pin_auth'] === "1" ? true : false;
+            $this->returnData['status'] = $pin_auth;
+            $r = json_encode($this->returnData);
+            $this->returnData = [
+                "code"  => 200
+            ];
+            $response->getBody()->write($r);
+            return $response->withHeader('Content-Type', 'application/json');
         } else {
             $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
             $response->getBody()->write(json_encode($this->returnErrors));
