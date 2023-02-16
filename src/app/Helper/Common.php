@@ -23,7 +23,7 @@ class Common {
     }
 
     public function sendForgotPassEmail($name, $toEmail, $token) {        
-        $Link = getenv('APP_URL') . '/reset-pass?token=' . $token;
+        $Link = getenv('APP_URL') . '/reset-password?token=' . $token;
       
         $message = "<b>
         Please do not reply to this email.</b>
