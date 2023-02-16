@@ -276,10 +276,34 @@ class UserGateway {
         UPDATE tbl_user SET password=:pass, token=:emptok WHERE id=:id
         ";
         $emptok = '';
-        $pass = md5($password);
+        $pass = $password;
         try{
             $obj = $this->db->prepare($statement);
             $obj->bindParam(':pass', $password, PDO::PARAM_STR);
+            $obj->bindParam(':emptok', $emptok, PDO::PARAM_STR);
+            $obj->bindParam(':id', $id, PDO::PARAM_INT);
+            $obj->execute();               
+            return $obj->rowCount(); 
+        } catch(\PDOException $e) {            
+            $this->returnErrors['errors'] = $e->getMessage();
+            $res['body']    = json_encode($this->returnErrors);
+            $this->returnErrors = [
+                "code"  => 400
+            ];
+            return $res['body'];
+        }
+    }
+
+    public function updateResetPin($pin_arg, $id)
+    {
+        $statement = "
+        UPDATE tbl_user SET pin=:pin, token=:emptok WHERE id=:id
+        ";
+        $emptok = '';
+        $pin = $pin_arg;
+        try{
+            $obj = $this->db->prepare($statement);
+            $obj->bindParam(':pin', $pin, PDO::PARAM_STR);
             $obj->bindParam(':emptok', $emptok, PDO::PARAM_STR);
             $obj->bindParam(':id', $id, PDO::PARAM_INT);
             $obj->execute();               

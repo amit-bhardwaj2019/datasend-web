@@ -145,7 +145,7 @@ class LoginController
                 // passes
                 $user_data = $this->userGateway->getByToken($token);
                 $id = $user_data['id'];
-                $hash_pass = md5($password);
+                $hash_pass = hash_hmac("sha256", $password, getenv('DROOM_PIN_SALT'));
                 $affected_record = $this->userGateway->updateResetPass($hash_pass, $id);
                 if($affected_record > 0) {
                     $this->returnData['message'] = 'Your Password has been changed successfully.Now you can login with this password.';
@@ -185,7 +185,130 @@ class LoginController
             return $response->withHeader('Content-Type', 'application/json');
         }
         
-        var_dump($request->getParsedBody());
+        
+    }
+
+    public function forgotPin(Request $request, Response $response)
+    {
+        $input_data = $request->getParsedBody();
+        $email = $input_data['email'];
+        $validate = new Validator(['email' => $email]);
+        $validate->rule('required','email')
+                ->rule('email', 'email');
+
+        if($validate->validate()) {
+            // passes
+            $token = $this->ci->get('common')->createToken();
+            $record = $this->userGateway->getByEmail($email);
+            if(is_array($record)) {
+                $id		= $record['id'];
+                $email	= $record['email'];
+                $name	= $record['name'];
+                
+                $this->userGateway->updateToken($token, $id);
+                $mail_func = $this->ci->get('common')->sendForgotPinEmail($name, $email, $token);
+                if($mail_func) {
+                    $this->returnData['message'] = "A confirmation link has been sent to your email. Please check your email.";
+                    $r = json_encode($this->returnData);
+                    $this->returnData = [
+                        "code"  => 200
+                    ];
+                    $response->getBody()->write($r);
+                    return $response->withHeader('Content-Type', 'application/json');
+                } else {
+                    $this->returnErrors['errors'] = 'There\'s some error while send email.';
+                    $r    = json_encode($this->returnErrors);
+                    $this->returnErrors = [
+                        "code"  => 400
+                    ];
+                    $response->getBody()->write($r);
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
+            } else {
+                $this->returnErrors['errors'] = 'This email address is not registered with us.';
+                $r    = json_encode($this->returnErrors);
+                $this->returnErrors = [
+                    "code"  => 400
+                ];
+                $response->getBody()->write($r);
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+        }   else {
+            // fail
+            $this->returnErrors['errors'] = $validate->errors();
+            $r    = json_encode($this->returnErrors);
+            $this->returnErrors = [
+                "code"  => 400
+            ];
+            $response->getBody()->write($r);
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+    }
+
+    public function resetPin(Request $request, Response $response)
+    {
+        if($request->getQueryParam('token') !== NULL) {
+            $token          = $request->getQueryParam('token');
+            $input_data     = $request->getParsedBody();
+            $pin            = $input_data['pin'];
+            $confirmpin     = $input_data['confirmpin'];
+            $validate = new Validator(['pin' => $pin, 'confirmpin' => $confirmpin]);
+            
+
+            $validate->rule('required', ['pin', 'confirmpin'])
+                    ->rule('numeric', 'pin')
+                    ->rule('numeric', 'confirmpin')
+                    ->rule('min','pin', 100000)
+                    ->rule('max','pin', 999999)
+                    ->rule('equals', 'pin', 'confirmpin');
+            if($validate->validate()) {
+                // passes
+                $user_data = $this->userGateway->getByToken($token);
+                
+                $id = $user_data['id'];
+                $hash_pin = hash_hmac("sha256", $pin, getenv('DROOM_PIN_SALT'));
+                
+                $affected_record = $this->userGateway->updateResetPin($hash_pin, $id);
+                if($affected_record > 0) {
+                    $this->returnData['message'] = 'Your Pin has been changed successfully.Now you can login with this pin.';
+                    $this->returnData['success']    = true;
+                    $r = json_encode($this->returnData);
+                    $this->returnData = [
+                        "code"  => 200
+                    ];
+                    $response->getBody()->write($r);
+                    return $response->withHeader('Content-Type', 'application/json');
+                } else {
+                    $this->returnErrors['errors'] = "Invalid request!";
+                    $r    = json_encode($this->returnErrors);
+                    $this->returnErrors = [
+                        "code"  => 400
+                    ];
+                    $response->getBody()->write($r);
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
+            } else {
+                $this->returnErrors['errors'] = $validate->errors();
+                $r    = json_encode($this->returnErrors);
+                $this->returnErrors = [
+                    "code"  => 400
+                ];
+                $response->getBody()->write($r);
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+        } else {
+            // Incorrect link.
+            $this->returnErrors['errors'] = "Invalid request!";
+            $r    = json_encode($this->returnErrors);
+            $this->returnErrors = [
+                "code"  => 400
+            ];
+            $response->getBody()->write($r);
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+        
+        
     }
 }
 ?>

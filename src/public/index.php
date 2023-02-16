@@ -98,6 +98,9 @@ $app->group('/api', function () {
 
     $this->post('/reset-password', LoginController::class.':resetPassword');
 
+    $this->post('/forgot-pin', LoginController::class.':forgotPin');
+
+    $this->post('/reset-pin', LoginController::class.':resetPin');
 });
 
 $app->run();

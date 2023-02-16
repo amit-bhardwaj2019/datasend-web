@@ -70,4 +70,19 @@ class Common {
             return $mail->ErrorInfo;
         }
       }
+
+      public function sendForgotPinEmail($name, $toEmail, $token) {        
+        $Link = getenv('APP_URL') . '/reset-pin?token=' . $token;
+      
+        $message = "<b>Please do not reply to this email.</b><br/><br/>Dear " . $name . " ,<br><br>Thank you for your request.<br>To reset your pin <a href=" . $Link . ">click here</a>.<br><br>Kind regards<br>The Data Room Team<br><br><br>The information contained in this email is intended for the use of the addressee and is confidential.If you are not the intended recipient, you must not use, disclose, read, forward, copy or retain the information. If you have received this email in error please delete it and notify the sender by return email or telephone. You assume all liability for any loss, damage or other consequences which may arise from opening this email, any attachments or using this service. Data Room service provided by <a href='http://www.datasend.co.uk/'>Data Send UK Ltd </a> All rights reserved.";
+        $Subject = 'Pin Reminder';        
+        $fromEmail  = getenv('MAIL_FROM_ADDRESS');
+        $fromName   = getenv('MAIL_FROM_NAME');
+        $mail = $this->sendMail($Subject, $toEmail, $message, $fromEmail, $fromName);
+        if($mail) {
+            return true;
+        } else {
+            return false;
+        }
+      }
 }
