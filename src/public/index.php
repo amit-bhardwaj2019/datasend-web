@@ -5,6 +5,8 @@ use \Psr\Http\Message\ResponseInterface as Response;
 use Dotenv\Dotenv;
 use App\Controller\UserController;
 use App\Controller\LoginController;
+use App\Controller\AdminLoginController;
+use App\Controller\AdminUserController;
 use App\Helper\Common;
 require __DIR__.'/../../vendor/autoload.php';
 
@@ -101,6 +103,15 @@ $app->group('/api', function () {
     $this->post('/forgot-pin', LoginController::class.':forgotPin');
 
     $this->post('/reset-pin', LoginController::class.':resetPin');
+
+    // admin login
+    $this->post('/admin-login', AdminLoginController::class.':login');
+
+    $this->get('/email', AdminUserController::class.':getEmail');
+
+    $this->post('/email', AdminUserController::class.':changeEmail');
+
+    $this->post('/update-password', AdminUserController::class.':updatePassword');
 });
 
 $app->run();

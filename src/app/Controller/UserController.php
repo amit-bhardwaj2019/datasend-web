@@ -50,7 +50,16 @@ class UserController {
             return $this->ci->get('response')->withHeader('Content-Type', 'application/json');
         }
     }
+    /**
+     * @SWG\Info(title="Get Edit user info details", version="1.0")
+     */
 
+    /**
+     * @SWG\Get(
+     *     path="/api/users",
+     *     @SWG\Response(response="200", description="An example resource")
+     * )
+     */
     public function show(Request $request, Response $response)
     {        
         // get user id from jwt 
