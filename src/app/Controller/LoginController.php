@@ -145,7 +145,7 @@ class LoginController
                 // passes
                 $user_data = $this->userGateway->getByToken($token);
                 $id = $user_data['id'];
-                $hash_pass = hash_hmac("sha256", $password, getenv('DROOM_PIN_SALT'));
+                $hash_pass = md5($password);
                 $affected_record = $this->userGateway->updateResetPass($hash_pass, $id);
                 if($affected_record > 0) {
                     $this->returnData['message'] = 'Your Password has been changed successfully.Now you can login with this password.';
