@@ -149,5 +149,48 @@ class AdminUserController {
         $response->getBody()->write($r);
         return $response->withHeader('Content-Type', 'application/json');
     }
+
+    public function manageUsers(Request $request, Response $response)
+    {
+        $query_params = $request->getQueryParams();
+        $page_num = (int)$query_params['Page'];
+        $page_limit = (int)$query_params['PageLimit'];
+        $offset = $page_limit * ($page_num-1);
+        $results = $this->adminGateway->paginate($offset, $page_limit);
+        if(count($results) > 0) {
+            $users = [];
+            foreach($results AS $key=>$value) {
+                $users[$key]['id']      = $value['id'];
+                $users[$key]['name']    = $value['name'];
+                $users[$key]['email']   = $value['email'];
+                $users[$key]['status']  = $value['status'] === 0 ? 'Inactive' : 'Active';
+            } 
+            
+            $this->returnData['users'] = $users;
+            $r = json_encode($this->returnData);
+            unset($this->returnData['users']);
+        } else {
+            $this->returnErrors['errors'] = "No records found!";
+            $r = json_encode($this->returnErrors);
+            unset($this->returnErrors['detail']);
+        }
+
+        $response->getBody()->write($r);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function check(Request $request, Response $response)
+    {
+        if(!is_null($this->user_id)) {
+            $this->returnData['is_admin'] = true;
+            $r = json_encode($this->returnData);
+        } else {
+            $this->returnErrors['is_admin'] = false;
+            $r = json_encode($this->returnErrors);
+        }
+
+        $response->getBody()->write($r);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
 }
 ?>

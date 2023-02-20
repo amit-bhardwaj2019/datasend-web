@@ -116,4 +116,23 @@ class AdminGateway {
             return $e->getMessage();
         }
     }
+
+    public function paginate(int $offset, int $page_limit)
+    {
+        $statement = "
+        SELECT * FROM tbl_user WHERE 1 and userlevel=:userlevel Order By name LIMIT :offset, :page_limit
+        ";
+        $userlevel = "1";
+        try {
+            $obj = $this->db->prepare($statement);
+            $obj->bindParam(':userlevel', $userlevel, PDO::PARAM_STR);
+            $obj->bindParam(':offset', $offset, PDO::PARAM_INT);
+            $obj->bindParam(':page_limit', $page_limit, PDO::PARAM_INT);
+            $obj->execute();
+            $result = $obj->fetchAll(\PDO::FETCH_ASSOC);                 
+            return $result;
+        } catch (\PDOException $ex) {
+            return $ex->getMessage();
+        }
+    }
 }

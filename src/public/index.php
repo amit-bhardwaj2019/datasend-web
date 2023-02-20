@@ -104,14 +104,23 @@ $app->group('/api', function () {
 
     $this->post('/reset-pin', LoginController::class.':resetPin');
 
-    // admin login
-    $this->post('/admin-login', AdminLoginController::class.':login');
+    
 
-    $this->get('/email', AdminUserController::class.':getEmail');
+    $this->group('/admin', function () {
+        // admin login
+        $this->post('/login', AdminLoginController::class.':login');
 
-    $this->post('/email', AdminUserController::class.':changeEmail');
+        $this->get('/check', AdminUserController::class.':check');
 
-    $this->post('/update-password', AdminUserController::class.':updatePassword');
+        $this->get('/email', AdminUserController::class.':getEmail');
+
+        $this->post('/email', AdminUserController::class.':changeEmail');
+
+        $this->post('/update-password', AdminUserController::class.':updatePassword');
+
+        $this->get('/manage-users', AdminUserController::class.':manageUsers');
+    });
+    
 });
 
 $app->run();
