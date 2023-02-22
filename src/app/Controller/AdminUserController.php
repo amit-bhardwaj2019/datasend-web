@@ -156,6 +156,10 @@ class AdminUserController {
         $page_num = (int)$query_params['Page'];
         $page_limit = (int)$query_params['PageLimit'];
         $offset = $page_limit * ($page_num-1);
+        $totalRecords = $this->adminGateway->totalRecords();
+        $this->ci->get('logger')->info($totalRecords);
+        $last_page = ceil($totalRecords/$page_limit);
+        $this->ci->get('logger')->info($last_page);
         $results = $this->adminGateway->paginate($offset, $page_limit);
         if(count($results) > 0) {
             $users = [];
@@ -167,8 +171,9 @@ class AdminUserController {
             } 
             
             $this->returnData['users'] = $users;
+            $this->returnData['last_page'] = $last_page;
             $r = json_encode($this->returnData);
-            unset($this->returnData['users']);
+            unset($this->returnData['users'], $this->returnData['last_page']);
         } else {
             $this->returnErrors['errors'] = "No records found!";
             $r = json_encode($this->returnErrors);

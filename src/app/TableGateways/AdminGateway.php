@@ -136,6 +136,23 @@ class AdminGateway {
         }
     }
 
+    public function totalRecords()
+    {
+        $statement = "
+        SELECT * FROM tbl_user WHERE 1 and userlevel=:userlevel Order By name
+        ";
+        $userlevel = "1";
+        try {
+            $obj = $this->db->prepare($statement);
+            $obj->bindParam(':userlevel', $userlevel, PDO::PARAM_STR);
+            $obj->execute();
+            $result = $obj->rowCount();                 
+            return $result;
+        } catch (\PDOException $ex) {
+            return $ex->getMessage();
+        }
+    }
+
     public function findByEmail($email)
     {
         $pattern = '%' .$email. '%';

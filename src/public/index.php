@@ -8,6 +8,7 @@ use App\Controller\LoginController;
 use App\Controller\AdminLoginController;
 use App\Controller\AdminUserController;
 use App\Helper\Common;
+
 require __DIR__.'/../../vendor/autoload.php';
 
 $dotenv = new Dotenv(__DIR__. '/../../');
@@ -37,6 +38,13 @@ $container['db'] = function ($c) {
 $container['common'] = function($c) {
     $common = new Common($c);
     return $common;
+};
+
+$container['logger'] = function ($c) {
+    $settings = $c->get('settings')['logger'];
+    $logger = new \Monolog\Logger('test-app');
+    $logger->pushHandler(new \Monolog\Handler\StreamHandler('php://stdout', \Monolog\Logger::DEBUG));
+    return $logger;
 };
 
 $app->options('/{routes:.+}', function ($request, $response, $args) {
@@ -73,6 +81,7 @@ $app->group('/api', function () {
     });
     
     $this->get('/test', function(Request $request, Response $response) {
+        $this->get('logger')->info('Hello world!');
         $cookie = $_COOKIE['act'];
         $cookie2 = $_COOKIE['qwe'];
         $response->getBody()->write('Hello '. $cookie . ' '. $cookie2);
