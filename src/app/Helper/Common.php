@@ -85,4 +85,36 @@ class Common {
             return false;
         }
       }
+
+      public function SendSubUserLoginEmail($id) {        
+        $record = $this->userGateway->find($id);
+        $Name       = $record['name'];
+        $Email      = $record['email'];
+        $Token      = $record['token'];
+        $userlevel  = $record['userlevel'];
+        
+        $GroupName = $this->userGateway->GetAssignGroup($id);
+        var_export($GroupName);
+    /*    $Link = getenv('APP_URL') . '/reset-password?token=' . $Token;
+        if ($GroupName != '') {
+            $message = "Dear " . ucwords($Name) . " <br> <br> We have created your account, your login details are:<br> Username :<a href='mailto:" . $Email . "'>" . $Email . "</a><br><br> First you must reset the default password to something of your own, using a minimum of 9 characters. <br><br> You can reset the password by clicking <a href=" . $Link . ">here</a> <br>If you have already reset your password, there is no need to do it again unless you have forgotten it or want to change it. <br> <br> Kind regards <br> The Data Room Team <br><br> The information contained in this email is intended for the use of the addressee and is confidential. If you are not the intended recipient, you must not use, disclose, read, forward, copy or retain the information. If you have received this email in error please delete it and notify the sender by return email or telephone. You assume all liability for any loss, damage or other consequences which may arise from opening this email, any attachments or using this service. Data Room service provided by <a href='" . $ServerUrl . "'>Data Send UK Ltd</a> &copy; All rights reserved.";
+        } else {
+            $message = "Dear " . ucwords($Name) . " <br><br><b>Please do not reply to this email.</b><br> <br> We have created your account, your login details are:<br> Username :<a href='mailto:" . $Email . "'>" . $Email . "</a><br><br> First you must reset the default password to something of your own, using a minimum of 9 characters. <br><br> You can reset the password by clicking <a href=" . $Link . ">here</a> <br>If you have already reset your password, there is no need to do it again unless you have forgotten it or want to change it. <br> <br> Kind regards <br> The Data Room Team <br><br> The information contained in this email is intended for the use of the addressee and is confidential. If you are not the intended recipient, you must not use, disclose, read, forward, copy or retain the information. If you have received this email in error please delete it and notify the sender by return email or telephone. You assume all liability for any loss, damage or other consequences which may arise from opening this email, any attachments or using this service. Data Room service provided by <a href='" . $ServerUrl . "'>Data Send UK Ltd</a> &copy; All rights reserved.";
+        }
+        if ($userlevel == 2) {
+            $message = "<b>Please do not reply to this email.</b><br><br>Dear " . ucwords($Name) . " <br> <br> Your account has been created or recently modified. Here are your login details.<br><br> Username :" . $Email . "<br><br> <b>Password Reset Procedure:</b><br>First time users must change the initial password to something of their own with a minimum of 9 characters.<br><br> You can reset the password by clicking <a href=" . $Link . ">here</a>.<br>If you have already reset your password, there is no need to do it again unless you have forgotten it or want to change it.<br><br>Kind regards<br>The Data Room Team<br><br>The information contained in this email is intended for the use of the addressee and is confidential.If you are not the intended recipient, you must not use, disclose, read, forward, copy or retain the information. If you have received this email in error please delete it and notify the sender by return email or telephone. You assume all liability for any loss, damage or other consequences which may arise from opening this email, any attachments or using this service. Data Room service provided by <a href='http://www.datasend.co.uk/'>Data Send UK Ltd </a> &copy; All rights reserved.";
+        }
+        $Subject = 'New Account';
+        $toEmail = $Email;
+        if (trim($AdminEmail) == '') {
+            $query = mysql_query("SELECT contactusemail FROM tbl_admin");
+            $AdminEmail = mysql_result($query, 0, 'contactusemail');
+        }
+        $toEmail = $Email;
+        $fromEmail = $AdminEmail;
+        $fromName = 'Data Room';
+        
+        sendEmail($Subject, $toEmail, $message, $fromEmail, $fromName);
+        */
+    }
 }

@@ -192,5 +192,92 @@ class AdminUserController {
         $response->getBody()->write($r);
         return $response->withHeader('Content-Type', 'application/json');
     }
+
+    public function searchUsers(Request $request, Response $response)
+    {
+        $input_data = $request->getParsedBody();
+
+        $validate = new Validator(['email' => $input_data['email']]);
+        $validate->rule('required', 'email');
+
+        if($validate->validate()) {
+            // passes
+            $results = $this->adminGateway->findByEmail($input_data['email']);
+            if(count($results) > 0) {
+                $users = [];
+                foreach($results AS $key=>$value) {
+                    $users[$key]['id']      = $value['id'];
+                    $users[$key]['name']    = $value['name'];
+                    $users[$key]['email']   = $value['email'];
+                    $users[$key]['status']  = $value['status'] === 0 ? 'Inactive' : 'Active';
+                }                 
+                $this->returnData['users'] = $users;
+                $r = json_encode($this->returnData);
+                unset($this->returnData['users']);
+            } else {
+                $this->returnErrors['users'] = "No record(s) found.";
+                $r = json_encode($this->returnErrors);
+                unset($this->returnErrors['users']);
+            }
+        } else {
+            // fails
+            $this->returnErrors['errors'] = $validate->errors();
+            $r = json_encode($this->returnErrors);            
+        }
+
+        $response->getBody()->write($r);
+        return $response->withHeader('Content-Type', 'application/json');        
+    }
+
+    public function addUser(Request $request, Response $response)
+    {
+        $ret                = $this->adminGateway->defualtSapce();
+        $allocated_space    = (int)$ret['k'];
+        $input_data         = $request->getParsedBody();
+        $validate           = new Validator(['name' => $input_data['name'], 'email' => $input_data['email'], 'url' => $input_data['url_name'], 'totalspace' => $input_data['totalspace']]);
+
+        $validate->rule('required', 'name')->message('Please enter {field}.')
+                ->rule('required', 'email')->message('Please enter {field}.')
+                ->rule('email', 'email')->message('Please enter valid {field}.')
+                ->rule('required', 'url')->message('Please enter {field}.')
+                ->rule('required', 'totalspace')->message('Please enter {field}.')
+                ->rule('integer', 'totalspace')
+                ->rule('min', 'totalspace', $allocated_space)
+                ->message('{field} can not be less than default space '.$allocated_space .' Mb.');
+        $validate->labels([
+            'url'           => 'URL Name',
+            'totalspace'    => 'Total allocated space'
+        ]);
+
+        if($validate->validate()){
+            // passes
+            $checkInExistingAccount = $this->adminGateway->checkForExistingAccount($input_data['email']);
+            if(is_int($checkInExistingAccount) && $checkInExistingAccount === 1) {
+                $this->returnErrors['message'] = 'This email address is already in use by another user.';
+                $r = json_encode($this->returnErrors);
+                unset($this->returnErrors['message']);
+            } else {
+                // add new user
+                $token = $this->ci->get('common')->createToken();                
+                $input_data['token'] = $token;
+                $result = (int)$this->adminGateway->insertMainUser($input_data);
+                var_export($this->ci->get('common')->SendSubUserLoginEmail($result));
+            }
+        } else {
+            // fails
+            $this->returnErrors['errors'] = $validate->errors();
+            $r = json_encode($this->returnErrors);
+            unset($this->returnErrors['errors']);
+        }
+
+        $response->getBody()->write($r);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function test(Request $request, Response $response)
+    {
+        $input_data = $request->getQueryParams();
+        var_export($this->adminGateway->checkForExistingAccount($input_data['email']));
+    }
 }
 ?>

@@ -119,6 +119,10 @@ $app->group('/api', function () {
         $this->post('/update-password', AdminUserController::class.':updatePassword');
 
         $this->get('/manage-users', AdminUserController::class.':manageUsers');
+
+        $this->post('/search-users', AdminUserController::class.':searchUsers');
+
+        $this->post('/adduser', AdminUserController::class.':addUser');
     });
     
 });
