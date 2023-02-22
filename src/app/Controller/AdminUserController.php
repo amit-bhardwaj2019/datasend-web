@@ -157,9 +157,9 @@ class AdminUserController {
         $page_limit = (int)$query_params['PageLimit'];
         $offset = $page_limit * ($page_num-1);
         $totalRecords = $this->adminGateway->totalRecords();
-        $this->ci->get('logger')->info($totalRecords);
+        // $this->ci->get('logger')->info($totalRecords);
         $last_page = ceil($totalRecords/$page_limit);
-        $this->ci->get('logger')->info($last_page);
+        // $this->ci->get('logger')->info($last_page);
         $results = $this->adminGateway->paginate($offset, $page_limit);
         if(count($results) > 0) {
             $users = [];
