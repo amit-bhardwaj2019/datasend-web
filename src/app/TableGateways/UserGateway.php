@@ -362,26 +362,22 @@ class UserGateway {
     }
 
     public function GetAssignGroup($ID) {
-        $regex_exp = '%'.'::'.$ID.'::'.'%';
         $query = "
-        SELECT groupname as k FROM tbl_groups WHERE user LIKE :regex 
+        SELECT groupname as k FROM tbl_groups WHERE user LIKE '%::" . $ID . "::%' 
         ";
-
         try {
-            $obj = $this->db->prepare($query);
-            $obj->bindParam(':regex', $regex_exp, \PDO::PARAM_STR);
-            $obj->execute();
-            $obj->debugDumpParams();
+            $obj = $this->db->query($query);            
+            $num = $obj->rowCount();
+            $NameArr = array();
+            $records = $obj->fetchAll(\PDO::FETCH_ASSOC);
+            
+            foreach($records AS $record) {
+                $NameArr[] = $record['k'];                
+            }
+            $Name = @implode(",", $NameArr);        
+            return $Name;
         } catch (\PDOException $ex) {
             return $ex->getMessage();
-        }
-     /*   $num = @mysql_num_rows($query);
-        $NameArr = array();
-        for ($i = 0; $i < $num; $i++) {
-          $NameArr[] = @mysql_result($query, $i, 'k');
-        }
-        $Name = @implode(",", $NameArr);
-      
-        return $Name;*/
-      }
+        }     
+    }
 }

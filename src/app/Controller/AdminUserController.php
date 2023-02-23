@@ -5,12 +5,14 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Container\ContainerInterface;
 use App\TableGateways\AdminGateway;
+use App\TableGateways\UserGateway;
 use App\Classes\JwtHandler;
 use Valitron\Validator;
 
 class AdminUserController {
     private $ci;    
     private $adminGateway;
+    private $userGateway;
     private $returnErrors = [
         "code"  => 400
     ];
@@ -24,6 +26,7 @@ class AdminUserController {
     {
         $this->ci = $ci;
         $this->adminGateway = new AdminGateway($this->ci->get('db'));        
+        $this->userGateway = new UserGateway($this->ci->get('db'));        
 
         try {
             if($this->ci->get('request')->hasHeader('HTTP_AUTHORIZATION')) 
@@ -281,8 +284,10 @@ class AdminUserController {
 
     public function test(Request $request, Response $response)
     {
-        $input_data = $request->getQueryParams();
+       /* $input_data = $request->getQueryParams();
         var_export($this->adminGateway->checkForExistingAccount($input_data['email']));
+        */
+        var_export($this->userGateway->GetAssignGroup($request->getQueryParams()['id']));
     }
 }
 ?>

@@ -132,6 +132,8 @@ $app->group('/api', function () {
         $this->post('/search-users', AdminUserController::class.':searchUsers');
 
         $this->post('/adduser', AdminUserController::class.':addUser');
+
+        $this->get('/test', AdminUserController::class.':test');
     });
     
 });

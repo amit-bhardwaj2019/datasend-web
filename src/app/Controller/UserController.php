@@ -43,10 +43,8 @@ class UserController {
             
             $this->returnErrors['message'] = $e->getMessage();
             $res['body']    = json_encode($this->returnErrors);
-            $this->ci->get('response')->getBody()->write($res['body']);
-            $this->returnErrors = [
-                "code"  => 400
-            ];
+            $this->ci->get('response')->getBody()->write($res['body']);            
+            unset($this->returnErrors['message']);
             return $this->ci->get('response')->withHeader('Content-Type', 'application/json');
         }
     }
