@@ -233,7 +233,7 @@ class AdminGateway {
             $obj->bindParam(':totalspace', $arrInputData['totalspace'], \PDO::PARAM_INT);
             $obj->execute(); 
             $obj->debugDumpParams();       
-            return $this->db->lastInsertId();
+            // return $this->db->lastInsertId();
         } catch (\PDOException $ex) {
             return $ex->getMessage();
         }
