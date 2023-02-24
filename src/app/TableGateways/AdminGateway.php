@@ -232,7 +232,7 @@ class AdminGateway {
             $obj->bindParam(':url_name', $arrInputData['url_name'], \PDO::PARAM_STR);
             $obj->bindParam(':totalspace', $arrInputData['totalspace'], \PDO::PARAM_INT);
             $obj->execute(); 
-            $obj->debugDumpParams();       
+            var_export($obj->debugDumpParams());       
             // return $this->db->lastInsertId();
         } catch (\PDOException $ex) {
             return $ex->getMessage();
