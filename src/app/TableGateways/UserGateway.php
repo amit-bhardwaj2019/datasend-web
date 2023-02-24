@@ -380,4 +380,33 @@ class UserGateway {
             return $ex->getMessage();
         }     
     }
+
+    public function updateUserByAdmin($id, $arrData)
+    {        
+        $statement = "
+        UPDATE tbl_user SET name=:name, address1=:address1, address2=:address2, city=:city,country=:country, zipcode=:zipcode, phone=:phone, email=:email, status=:status,token=:tok, url_name=:url_name, totalspace=:totalspace WHERE id=:id
+        ";
+
+        try {
+            $obj = $this->db->prepare($statement);
+            $obj->bindParam(':name', $arrData['name'], \PDO::PARAM_STR);
+            $obj->bindParam(':address1', $arrData['address1'], \PDO::PARAM_STR);
+            $obj->bindParam(':address2', $arrData['address2'], \PDO::PARAM_STR);
+            $obj->bindParam(':city', $arrData['city'], \PDO::PARAM_STR);
+            $obj->bindParam(':country', $arrData['country'], \PDO::PARAM_STR);
+            $obj->bindParam(':zipcode', $arrData['zipcode'], \PDO::PARAM_STR);
+            $obj->bindParam(':phone', $arrData['phone'], \PDO::PARAM_STR);
+            $obj->bindParam(':email', $arrData['email'], \PDO::PARAM_STR);
+            $obj->bindParam(':status', $arrData['status'], \PDO::PARAM_INT);
+            $obj->bindParam(':totalspace', $arrData['totalspace'], \PDO::PARAM_STR);
+            $obj->bindParam(':url_name', $arrData['url_name'], \PDO::PARAM_STR);
+            $obj->bindParam(':tok', $arrData['token'], \PDO::PARAM_STR);
+            $obj->bindParam(':id', $id, \PDO::PARAM_INT);
+            $obj->execute();
+            
+            return $obj->rowCount();
+        } catch (\PDOException $ex) {
+            return $ex->getMessage();
+        }
+    }
 }

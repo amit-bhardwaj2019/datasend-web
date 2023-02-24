@@ -273,13 +273,72 @@ class AdminUserController {
                     $input_data['token'] = $token;
                     $result = (int)$this->adminGateway->insertMainUser($input_data);
                     // var_export($this->ci->get('common')->SendSubUserLoginEmail($result));
-                    $this->returnData['message'] = 'User added successfully.';
-                    $r =  json_encode($this->returnData);
-                    unset($this->returnData['message']);
+                    if(is_int($result)) {
+                        $this->returnData['message'] = 'User added successfully.';
+                        $r =  json_encode($this->returnData);
+                        unset($this->returnData['message']);
+                    } else {
+                        $this->returnErrors['errors'] = 'Check your information once.';
+                        $r = json_encode($this->returnErrors);
+                        unset($this->returnErrors['errors']);
+                    }
+                    
                 }
             } else {
                 // fails
                 $this->returnErrors['errors'] = $validate->errors();
+                $r = json_encode($this->returnErrors);
+                unset($this->returnErrors['errors']);
+            }
+        } else {
+            $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
+            $r = json_encode($this->returnErrors);          
+            unset($this->returnErrors['errors']);
+        }
+        $response->getBody()->write($r);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+
+    public function editUser(Request $request, Response $response)
+    {
+        if($this->auth_status === 1) {
+            $user_id = $request->getParsedBody()['id'];
+            $record = $this->userGateway->find($user_id); 
+            
+            if($record) {         
+                unset($record['userlevel'],$record['addedby'],$record['createdon'],$record['password'],$record['pin_auth'],$record['pin'],$record['token'],$record['isaccess'],$record['emailnotify'],$record['qaemailnotify'],$record['javauploadfolder'],$record['dicomviewer'],$record['active_for_mobile'],$record['access_token']);
+                $this->returnData['data'] = $record;
+                $r = json_encode($this->returnData);
+                unset($this->returnData['data']);
+            } else {
+                $this->returnErrors['errors'] = 'Record not found.';
+                $r = json_encode($this->returnErrors);
+                unset($this->returnErrors['errors']);
+            }
+        } else {
+            $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
+            $r = json_encode($this->returnErrors);          
+            unset($this->returnErrors['errors']);
+        }
+        $response->getBody()->write($r);
+        return $response->withHeader('Content-Type', 'application/json');        
+    }
+
+    public function updateUser(Request $request, Response $response)
+    {
+        if($this->auth_status === 1) {
+            $arrData = $request->getParsedBody();
+            $user_id = $arrData['id'];
+            $token= $this->ci->get('common')->createToken();
+            $arrData['token'] = $token;
+            $result = $this->userGateway->updateUserByAdmin($user_id, $arrData);
+            if(is_int($result)) {
+                $this->returnData['message'] = 'Record updated successfully.';
+                $r = json_encode($this->returnData);
+                unset($this->returnData['message']);
+            } else {
+                $this->returnErrors['errors'] = 'Check your information once.';
                 $r = json_encode($this->returnErrors);
                 unset($this->returnErrors['errors']);
             }

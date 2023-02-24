@@ -225,13 +225,13 @@ class AdminGateway {
             $obj->bindParam(':phone', $arrInputData['phone'], \PDO::PARAM_STR);
             $obj->bindParam(':email', $arrInputData['email'], \PDO::PARAM_STR);
             $obj->bindParam(':pass', $password, \PDO::PARAM_STR);
-            $obj->bindParam(':status', $arrInputData['status'], \PDO::PARAM_STR);
+            $obj->bindParam(':status', $arrInputData['status'], \PDO::PARAM_INT);
             $obj->bindParam(':userlevel', $arrInputData['userlevel'], \PDO::PARAM_STR);
             $obj->bindParam(':time', $createdon);
             $obj->bindParam(':token', $arrInputData['token'], \PDO::PARAM_STR);
             $obj->bindParam(':url_name', $arrInputData['url_name'], \PDO::PARAM_STR);
             $obj->bindParam(':totalspace', $arrInputData['totalspace'], \PDO::PARAM_INT);
-            $obj->execute();            
+            $obj->execute();        
             return $this->db->lastInsertId();
         } catch (\PDOException $ex) {
             return $ex->getMessage();
