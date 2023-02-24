@@ -133,7 +133,7 @@ $app->group('/api', function () {
 
         $this->post('/adduser', AdminUserController::class.':addUser');
 
-        $this->get('/edituser', AdminUserController::class.':editUser');
+        $this->get('/edituser/{id}', AdminUserController::class.':editUser');
 
         $this->put('/updateuser', AdminUserController::class.':updateUser');
 

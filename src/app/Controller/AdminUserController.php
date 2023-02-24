@@ -300,10 +300,10 @@ class AdminUserController {
     }
 
 
-    public function editUser(Request $request, Response $response)
+    public function editUser(Request $request, Response $response, array $args)
     {
         if($this->auth_status === 1) {
-            $user_id = $request->getParsedBody()['id'];
+            $user_id = $args['id'];
             $record = $this->userGateway->find($user_id); 
             
             if($record) {         
