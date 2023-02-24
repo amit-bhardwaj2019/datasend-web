@@ -273,8 +273,7 @@ class AdminUserController {
                     $input_data['token'] = $token;
                     $result = (int)$this->adminGateway->insertMainUser($input_data);
                     // var_export($this->ci->get('common')->SendSubUserLoginEmail($result));
-                    var_export($result);die('hello');
-                    if(is_int($result)) {
+                    if(is_int($result) && $result>0) {
                         $this->returnData['message'] = 'User added successfully.';
                         $r =  json_encode($this->returnData);
                         unset($this->returnData['message']);
