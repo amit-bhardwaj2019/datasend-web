@@ -19,7 +19,7 @@ class UserController {
         "code"      => 200,
         "success"   => true
     ];
-    private $auth_status = 0; //0 Unathorized, 1 //Valid user, 2 //Expired token or signature does not match.
+    private $auth_status = 0; //0 Unathorized, 1 //Valid user
     private $user_id = null;
     public function __construct(ContainerInterface $ci)
     {
@@ -44,7 +44,7 @@ class UserController {
             }
 
         } catch(\Exception $e) {
-            $this->auth_status = 2;
+            $this->auth_status = 0;
             /*
             $this->returnErrors['message'] = $e->getMessage();
             $res['body']    = json_encode($this->returnErrors);

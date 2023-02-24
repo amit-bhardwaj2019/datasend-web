@@ -22,6 +22,7 @@ class AdminUserController {
     ];
     private $user_id = null;
     private $email = null;
+    private $auth_status = 0; //0 Unathorized, 1 //Valid user
     public function __construct(ContainerInterface $ci)
     {
         $this->ci = $ci;
@@ -39,17 +40,20 @@ class AdminUserController {
                 else {
                     if($decoded_object->iss !== getenv('APP_URL')) throw new \Exception('Domain mismatch');
                 }
+                $this->auth_status = 1;
                 $this->user_id = $decoded_object->data->id;
                 $this->email = $decoded_object->data->contactusemail;
             }
 
         } catch(\Exception $e) {
-            
+            $this->auth_status = 0;
+            /*
             $this->returnErrors['message'] = $e->getMessage();
             $res['body']    = json_encode($this->returnErrors);
             $this->ci->get('response')->getBody()->write($res['body']);
             unset($this->returnErrors['message'], $res['body']);
             return $this->ci->get('response')->withHeader('Content-Type', 'application/json');
+            */
         }
     }
 
@@ -159,10 +163,8 @@ class AdminUserController {
         $page_num = (int)$query_params['Page'];
         $page_limit = (int)$query_params['PageLimit'];
         $offset = $page_limit * ($page_num-1);
-        $totalRecords = $this->adminGateway->totalRecords();
-        // $this->ci->get('logger')->info($totalRecords);
-        $last_page = ceil($totalRecords/$page_limit);
-        // $this->ci->get('logger')->info($last_page);
+        $totalRecords = $this->adminGateway->totalRecords();        
+        $last_page = ceil($totalRecords/$page_limit);        
         $results = $this->adminGateway->paginate($offset, $page_limit);
         if(count($results) > 0) {
             $users = [];
@@ -239,45 +241,53 @@ class AdminUserController {
 
     public function addUser(Request $request, Response $response)
     {
-        $ret                = $this->adminGateway->defualtSapce();
-        $allocated_space    = (int)$ret['k'];
-        $input_data         = $request->getParsedBody();
-        $validate           = new Validator(['name' => $input_data['name'], 'email' => $input_data['email'], 'url' => $input_data['url_name'], 'totalspace' => $input_data['totalspace']]);
+        if($this->auth_status === 1) {
+            $ret                = $this->adminGateway->defualtSapce();
+            $allocated_space    = (int)$ret['k'];
+            $input_data         = $request->getParsedBody();
+            $validate           = new Validator(['name' => $input_data['name'], 'email' => $input_data['email'], 'url' => $input_data['url_name'], 'totalspace' => $input_data['totalspace']]);
 
-        $validate->rule('required', 'name')->message('Please enter {field}.')
-                ->rule('required', 'email')->message('Please enter {field}.')
-                ->rule('email', 'email')->message('Please enter valid {field}.')
-                ->rule('required', 'url')->message('Please enter {field}.')
-                ->rule('required', 'totalspace')->message('Please enter {field}.')
-                ->rule('integer', 'totalspace')
-                ->rule('min', 'totalspace', $allocated_space)
-                ->message('{field} can not be less than default space '.$allocated_space .' Mb.');
-        $validate->labels([
-            'url'           => 'URL Name',
-            'totalspace'    => 'Total allocated space'
-        ]);
+            $validate->rule('required', 'name')->message('Please enter {field}.')
+                    ->rule('required', 'email')->message('Please enter {field}.')
+                    ->rule('email', 'email')->message('Please enter valid {field}.')
+                    ->rule('required', 'url')->message('Please enter {field}.')
+                    ->rule('required', 'totalspace')->message('Please enter {field}.')
+                    ->rule('integer', 'totalspace')
+                    ->rule('min', 'totalspace', $allocated_space)
+                    ->message('{field} can not be less than default space '.$allocated_space .' Mb.');
+            $validate->labels([
+                'url'           => 'URL Name',
+                'totalspace'    => 'Total allocated space'
+            ]);
 
-        if($validate->validate()){
-            // passes
-            $checkInExistingAccount = $this->adminGateway->checkForExistingAccount($input_data['email']);
-            if(is_int($checkInExistingAccount) && $checkInExistingAccount === 1) {
-                $this->returnErrors['message'] = 'This email address is already in use by another user.';
-                $r = json_encode($this->returnErrors);
-                unset($this->returnErrors['message']);
+            if($validate->validate()){
+                // passes
+                $checkInExistingAccount = $this->adminGateway->checkForExistingAccount($input_data['email']);
+                if(is_int($checkInExistingAccount) && $checkInExistingAccount === 1) {
+                    $this->returnErrors['message'] = 'This email address is already in use by another user.';
+                    $r = json_encode($this->returnErrors);
+                    unset($this->returnErrors['message']);
+                } else {
+                    // add new user
+                    $token = $this->ci->get('common')->createToken();                
+                    $input_data['token'] = $token;
+                    $result = (int)$this->adminGateway->insertMainUser($input_data);
+                    // var_export($this->ci->get('common')->SendSubUserLoginEmail($result));
+                    $this->returnData['message'] = 'User added successfully.';
+                    $r =  json_encode($this->returnData);
+                    unset($this->returnData['message']);
+                }
             } else {
-                // add new user
-                $token = $this->ci->get('common')->createToken();                
-                $input_data['token'] = $token;
-                $result = (int)$this->adminGateway->insertMainUser($input_data);
-                var_export($this->ci->get('common')->SendSubUserLoginEmail($result));
+                // fails
+                $this->returnErrors['errors'] = $validate->errors();
+                $r = json_encode($this->returnErrors);
+                unset($this->returnErrors['errors']);
             }
         } else {
-            // fails
-            $this->returnErrors['errors'] = $validate->errors();
-            $r = json_encode($this->returnErrors);
+            $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
+            $r = json_encode($this->returnErrors);          
             unset($this->returnErrors['errors']);
         }
-
         $response->getBody()->write($r);
         return $response->withHeader('Content-Type', 'application/json');
     }
