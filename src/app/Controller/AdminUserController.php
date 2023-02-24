@@ -308,6 +308,7 @@ class AdminUserController {
             
             if($record) {         
                 unset($record['userlevel'],$record['addedby'],$record['createdon'],$record['password'],$record['pin_auth'],$record['pin'],$record['token'],$record['isaccess'],$record['emailnotify'],$record['qaemailnotify'],$record['javauploadfolder'],$record['dicomviewer'],$record['active_for_mobile'],$record['access_token']);
+                $record['status'] = (int)$record['status'];
                 $this->returnData['data'] = $record;
                 $r = json_encode($this->returnData);
                 unset($this->returnData['data']);
@@ -332,16 +333,44 @@ class AdminUserController {
             $user_id = $arrData['id'];
             $token= $this->ci->get('common')->createToken();
             $arrData['token'] = $token;
-            $result = $this->userGateway->updateUserByAdmin($user_id, $arrData);
-            if(is_int($result)) {
-                $this->returnData['message'] = 'Record updated successfully.';
-                $r = json_encode($this->returnData);
-                unset($this->returnData['message']);
+
+            // validate data
+            $ret                = $this->adminGateway->defualtSapce();
+            $allocated_space    = (int)$ret['k'];
+            
+            $validate           = new Validator(['name' => $arrData['name'], 'email' => $arrData['email'], 'url' => $arrData['url_name'], 'totalspace' => $arrData['totalspace']]);
+
+            $validate->rule('required', 'name')->message('Please enter {field}.')
+                    ->rule('required', 'email')->message('Please enter {field}.')
+                    ->rule('email', 'email')->message('Please enter valid {field}.')
+                    ->rule('required', 'url')->message('Please enter {field}.')
+                    ->rule('required', 'totalspace')->message('Please enter {field}.')
+                    ->rule('integer', 'totalspace')
+                    ->rule('min', 'totalspace', $allocated_space)
+                    ->message('{field} can not be less than default space '.$allocated_space .' Mb.');
+            $validate->labels([
+                'url'           => 'URL Name',
+                'totalspace'    => 'Total allocated space'
+            ]);
+            if($validate->validate()) {
+                // passes
+                $result = $this->userGateway->updateUserByAdmin($user_id, $arrData);
+                if(is_int($result)) {
+                    $this->returnData['message'] = 'Record updated successfully.';
+                    $r = json_encode($this->returnData);
+                    unset($this->returnData['message']);
+                } else {
+                    $this->returnErrors['errors'] = 'Check your information once.';
+                    $r = json_encode($this->returnErrors);
+                    unset($this->returnErrors['errors']);
+                }
             } else {
-                $this->returnErrors['errors'] = 'Check your information once.';
-                $r = json_encode($this->returnErrors);
+                // fails
+                $this->returnErrors['errors'] = $validate->errors();
+                $r = json_encode($this->returnErrors);          
                 unset($this->returnErrors['errors']);
             }
+            
         } else {
             $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
             $r = json_encode($this->returnErrors);          
