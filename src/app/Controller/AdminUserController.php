@@ -387,5 +387,103 @@ class AdminUserController {
         */
         var_export($this->userGateway->GetAssignGroup($request->getQueryParams()['id']));
     }
+
+    public function destroyUser(Request $request, Response $response, array $args)
+    {
+        if($this->auth_status === 1) {
+            $DeleteID = $args['id'];
+        /*    $FolderNameArr = array();
+            $TotalSize = '0';
+            $query_select = mysql_query("SELECT * FROM tbl_folder WHERE (addedby='" . $DeleteID . "' OR referenceid='" . $DeleteID . "') ");
+            $num1 = @mysql_num_rows($query_select);
+            if ($num1 > 0) {
+                while ($row = mysql_fetch_array($query_select)) {
+                    $FolderName = $row['name'];
+                    $Type = $row['type'];
+                    $TotalSize += $row['size'];
+                    $FolderNameArr[] = $row['name'];
+                    //$DirectoryPath = "../../../Uploads/";
+                    $DirectoryPath = "/var/www/vhosts/datasenduk-srv.co.uk/Uploads/";
+                    if ($Type == 'folder') {
+                        //echo "TT".$DirectoryPath.$FolderName;
+                        //exit();
+                        deleteDirectory($DirectoryPath . $FolderName);
+                        rmdir($DirectoryPath . $FolderName);
+                        DeleteAll_New($DeleteID);
+                    } else {
+                        @unlink($DirectoryPath . $FolderName);
+                    }
+                }
+            }
+            $SubUserID = GetSubUserID($DeleteID);
+            if(!empty($SubUserID)){
+                // Delete sub users physical files 
+                $query_select_sub = mysql_query("SELECT * FROM tbl_folder WHERE addedby in (" . $SubUserID . ")");
+                $num_sub = @mysql_num_rows($query_select_sub);
+                if ($num_sub > 0) {
+
+                    while ($row = mysql_fetch_array($query_select_sub)) {
+                        $FolderName = $row['name'];
+                        $Type = $row['type'];
+                        $TotalSize += $row['size'];
+                        $FolderNameArr[] = $row['name'];
+                        $DirectoryPath = "/var/www/vhosts/datasenduk-srv.co.uk/Uploads/";
+                        if ($Type == 'folder') {
+                            deleteDirectory($DirectoryPath . $FolderName);
+                            rmdir($DirectoryPath . $FolderName);
+                            DeleteAll($DeleteID);
+                        } else {
+                            @unlink($DirectoryPath . $FolderName);
+                        }
+                    }
+                }
+            }
+            
+            $querydellogo = "DELETE FROM  tbl_logo WHERE userid in ( '" . $DeleteID . "' ) ";
+            $resLogo = mysql_query($querydellogo);
+            //deleting files and folders of user and subusers
+            $query = mysql_query("DELETE FROM tbl_folder WHERE (addedby IN (" . $DeleteID . ") OR referenceid IN (" . $DeleteID . "))");
+            $queryLogos = "SELECT  filename FROM  tbl_logo WHERE userid in ( '" . $DeleteID . "' ) ";
+            $resLogos = mysql_query($queryLogos);
+            $num2 = @mysql_num_rows($resLogos);
+            if ($num2 > 0) {
+                while ($arrlogo = mysql_fetch_array($resLogos)) {
+                    unlink("../uploads/images/" . $arrlogo['filename']);
+                }
+            }
+            //deleting records from logs
+            $DeleteLog = mysql_query("DELETE FROM tbl_logs WHERE (loggedby IN (" . $DeleteID . ") OR loggedby IN (" . $SubUserID . "))");
+            //deleting groups and group folders
+            $queryGroups = "SELECT  id FROM  tbl_groups WHERE addedby in ( '" . $DeleteID . "' ) ";
+            $resGroup = mysql_query($queryGroups);
+            while ($arrGroup = mysql_fetch_array($resGroup)) {
+                $queryGroupFolder = "DELETE FROM  tbl_group_folder WHERE groupid in ( '" . $arrGroup['id'] . "' ) ";
+                $resGroup = mysql_query($queryGroupFolder);
+                $queryNotify = "DELETE FROM  tbl_notify WHERE groupid in ( '" . $arrGroup['id'] . "' ) ";
+                $resGroup = mysql_query($queryNotify);
+            }
+            $queryGroups = "DELETE FROM  tbl_groups WHERE addedby in ( '" . $DeleteID . "' ) ";
+            $resGroup = mysql_query($queryGroups);
+            //deleteing the questions
+            $DeleteQue = mysql_query("DELETE FROM tbl_question WHERE (addedby IN (" . $DeleteID . ") OR addedby	IN (" . $SubUserID . "))");
+            //deleting the replies
+            $DeleteRep = mysql_query("DELETE FROM tbl_reply WHERE (addedby IN (" . $DeleteID . ") OR addedby	IN (" . $SubUserID . "))");
+            */
+            $res = $this->userGateway->deleteUser($DeleteID);
+            if(is_int($res) && $res > 0) {
+                $this->returnData['message'] = 'Record has been deleted successfully.';
+                $r = json_encode($this->returnData);
+                unset($this->returnData['message']);
+            } else {
+                $this->returnErrors['errors'] = 'No record exist with provided id.';
+                $r = json_encode($this->returnErrors);
+                unset($this->returnErrors['errors']);
+            }            
+        } else {
+            $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
+            $r = json_encode($this->returnErrors);          
+            unset($this->returnErrors['errors']);
+        }
+    }
 }
 ?>

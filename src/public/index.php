@@ -137,6 +137,8 @@ $app->group('/api', function () {
 
         $this->put('/updateuser', AdminUserController::class.':updateUser');
 
+        $this->delete('/users/{id}', AdminUserController::class.':destroyUser');
+
         $this->get('/test', AdminUserController::class.':test');
     });
     

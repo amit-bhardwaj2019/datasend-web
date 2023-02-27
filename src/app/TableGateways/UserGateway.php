@@ -409,4 +409,18 @@ class UserGateway {
             return $ex->getMessage();
         }
     }
+
+    public function deleteUser($id)
+    {
+        $statement = "
+        DELETE FROM tbl_user WHERE (id IN (" . $id . ") OR addedby IN (" . $id . ") )
+        ";
+        try {
+            $obj = $this->db->query($statement);
+            return $obj->rowCount();
+
+        } catch (\PDOException $ex) {
+            return $ex->getMessage();
+        }
+    }
 }
