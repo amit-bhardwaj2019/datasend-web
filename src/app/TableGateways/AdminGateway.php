@@ -238,5 +238,32 @@ class AdminGateway {
         }
     }
 
-    
+    public function findSpace()
+    {
+        $statement = "
+        SELECT * FROM tbl_admin
+        ";
+        try {
+            $obj = $this->db->query($statement);
+            $result = $obj->fetch(\PDO::FETCH_ASSOC);
+            return $result;
+        } catch (\PDOException $ex) {
+            return $ex->getMessage();
+        }
+    }
+
+    public function updateSpace($space)
+    {
+        $statement = "
+        UPDATE tbl_admin SET filespace=:space
+        ";
+        try {
+            $obj = $this->db->prepare($statement);
+            $obj->bindParam(':space', $space);
+            $obj->execute();
+            return $obj->rowCount();
+        } catch (\PDOException $ex) {
+            return $ex->getMessage();
+        }
+    }
 }

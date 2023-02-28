@@ -139,7 +139,13 @@ $app->group('/api', function () {
 
         $this->delete('/users/{id}', AdminUserController::class.':destroyUser');
 
+        $this->post('/delete-users', AdminUserController::class.':deleteAll');
+
         $this->get('/test', AdminUserController::class.':test');
+
+        $this->get('/managespace', AdminUserController::class.':getSpace');
+
+        $this->post('/managespace', AdminUserController::class.':setSpace');
     });
     
 });

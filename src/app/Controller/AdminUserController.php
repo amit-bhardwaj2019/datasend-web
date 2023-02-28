@@ -484,6 +484,139 @@ class AdminUserController {
             $r = json_encode($this->returnErrors);          
             unset($this->returnErrors['errors']);
         }
+
+        $response->getBody()->write($r);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function deleteAll(Request $request, Response $response) 
+    {  
+        if($this->auth_status === 1) {      
+       /* $FolderNameArr = array();
+        $TotalSize = '0';
+        for ($i = 0; $i < count($_POST['Check']); $i++) {
+            $query_select = mysql_query("SELECT * FROM tbl_folder WHERE (addedby='" . $_POST['Check'][$i] . "' OR referenceid='" . $_POST['Check'][$i] . "') ");
+            while ($row = mysql_fetch_array($query_select)) {
+                $FolderName = $row['name'];
+                $Type = $row['type'];
+                $TotalSize += $row['size'];
+                $FolderNameArr[] = $row['name'];
+                //$DirectoryPath = "../../../Uploads/";
+                $DirectoryPath = "/var/www/vhosts/datasenduk-srv.co.uk/Uploads/";
+                if ($Type == 'folder') {
+                    deleteDirectory($DirectoryPath . $FolderName);
+                    DeleteAll($_POST['Check'][$i]);
+                } else {
+                    @unlink($DirectoryPath . $FolderName);
+                }
+            }
+        }
+        $DeleteID = @implode(",", $_POST['Check']);
+        $SubUserID = GetSubUserID($DeleteID);
+        $query = mysql_query("DELETE FROM tbl_folder WHERE (addedby IN (" . $DeleteID . ") OR referenceid IN (" . $DeleteID . "))");
+        $DeleteLog = mysql_query("DELETE FROM tbl_logs WHERE (loggedby IN (" . $DeleteID . ") OR loggedby IN (" . $SubUserID . "))");
+        $DeleteQue = mysql_query("DELETE FROM tbl_question WHERE (addedby IN (" . $DeleteID . ") OR addedby	IN (" . $SubUserID . "))");
+        $DeleteRep = mysql_query("DELETE FROM tbl_reply WHERE (addedby IN (" . $DeleteID . ") OR addedby	IN (" . $SubUserID . "))");
+        $DeleteID = @implode(",", $_POST['Check']);
+        $query = mysql_query("DELETE FROM tbl_user WHERE (id IN (" . $DeleteID . ") OR addedby IN (" . $DeleteID . ") )");
+        
+        //deleting groups and group folders
+        $queryLogos = "SELECT  filename FROM  tbl_logo WHERE userid in ( '" . $DeleteID . "' ) ";
+        $resLogos = mysql_query($queryLogos);
+        while ($arrlogo = mysql_fetch_array($resLogos)) {
+            unlink("../uploads/images/" . $arrlogo['filename']);
+        }
+        $querydellogo = "DELETE FROM  tbl_logo WHERE userid in ( '" . $DeleteID . "' ) ";
+        $resLogo = mysql_query($querydellogo);
+        //deleting groups and group folders
+        $queryGroups = "SELECT  id FROM  tbl_groups WHERE addedby in ( '" . $DeleteID . "' ) ";
+        $resGroup = mysql_query($queryGroups);
+        while ($arrGroup = mysql_fetch_array($resGroup)) {
+            $queryGroupFolder = "DELETE FROM  tbl_group_folder WHERE groupid in ( '" . $arrGroup['id'] . "' ) ";
+            $resGroup = mysql_query($queryGroupFolder);
+            $queryNotify = "DELETE FROM  tbl_notify WHERE groupid in ( '" . $arrGroup['id'] . "' ) ";
+            $resGroup = mysql_query($queryNotify);
+        }
+        $queryGroups = "DELETE FROM  tbl_groups WHERE addedby in ( '" . $DeleteID . "' ) ";
+        $resGroup = mysql_query($queryGroups);
+        //deleting the user
+        //$DeleteID  = @implode(",",$_POST['Check']);
+        */
+            $input_data = $request->getParsedBody();
+            
+            $DeleteID = @implode(",", $input_data['check']);
+            var_export($DeleteID);
+            $res = $this->userGateway->deleteUser($DeleteID);
+            
+            if(is_int($res) && $res > 0) {
+                $this->returnData['message'] = 'Record(s) has been deleted successfully.';
+                $r = json_encode($this->returnData);
+                unset($this->returnData['message']);
+            } else {
+                $this->returnErrors['errors'] = 'No record exist with provided id.';
+                $r = json_encode($this->returnErrors);
+                unset($this->returnErrors['errors']);
+            } 
+        } else {
+            $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
+            $r = json_encode($this->returnErrors);          
+            unset($this->returnErrors['errors']);
+        }
+        $response->getBody()->write($r);
+        return $response->withHeader('Content-Type', 'application/json');
+
+    }
+
+    public function getSpace(Request $request, Response $response)
+    {
+        if($this->auth_status === 1) {
+            $record = $this->adminGateway->findSpace();
+            if($record) {
+                $this->returnData['data'] = $record['filespace'];
+                $r = json_encode($this->returnData);
+                unset($this->returnData['data']);
+            } else {
+                $this->returnErrors['errors'] = 'No record found!';
+                $r = json_encode($this->returnErrors);          
+                unset($this->returnErrors['errors']);
+            }
+        } else {
+            $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
+            $r = json_encode($this->returnErrors);          
+            unset($this->returnErrors['errors']);
+        }
+
+        $response->getBody()->write($r);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+    public function setSpace(Request $request, Response $response)
+    {
+        if($this->auth_status === 1) {
+            $input_data = $request->getParsedBody();
+            $space = $input_data['space'];
+            $validate = new Validator(['space' => $space]);
+            $validate->rule('required', 'space')->message('Please enter the value of {field}.');
+            if($validate->validate()) {
+                $record = $this->adminGateway->updateSpace($space);
+                if(is_int($record) && $record > 0) {
+                    $this->returnData['message'] = 'Space updated successfully.';
+                    $r = json_encode($this->returnData);
+                    unset($this->returnData['data']);
+                }
+                
+            } else {
+                $this->returnErrors['errors'] = $validate->errors();
+                $r = json_encode($this->returnErrors);          
+                unset($this->returnErrors['errors']);
+            }
+        } else {
+            $this->returnErrors['errors'] = $this->ci->get('common')::INVALID_CREDENTIAL;
+            $r = json_encode($this->returnErrors);          
+            unset($this->returnErrors['errors']);
+        }
+
+        $response->getBody()->write($r);
+        return $response->withHeader('Content-Type', 'application/json');
     }
 }
 ?>
