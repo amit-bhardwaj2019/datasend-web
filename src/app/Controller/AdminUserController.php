@@ -59,8 +59,9 @@ class AdminUserController {
 
     public function getEmail(Request $request, Response $response)
     {
-        if(!is_null($this->email)) {
-            $this->returnData['details'] = ['email' => $this->email];
+        if($this->auth_status === 1) {
+            $res = $this->adminGateway->find(1);            
+            $this->returnData['details'] = ['email' => $res['email']];
             $this->returnData['success'] = true;
             $r = json_encode($this->returnData);
             unset($this->returnData['details'], $this->returnData['success']);
